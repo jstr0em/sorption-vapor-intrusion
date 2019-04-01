@@ -61,7 +61,7 @@ class Snow:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[data['Season']=='Winter']
+        data = data.loc[(data['Season']=='Winter') & (data['Specie']=='Tetrachloroethene')]
 
         g = sns.boxplot(
             x="SnowDepth",
@@ -83,7 +83,7 @@ class AC:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-
+        data = data.loc[(data['Specie']=='Tetrachloroethene')]
         g = sns.boxplot(
             x="AC",
             y="logIndoorConcentration",
@@ -104,6 +104,7 @@ class Heating:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
+        data = data.loc[(data['Specie']=='Tetrachloroethene')]
 
         g = sns.boxplot(
             x="Heating",
@@ -125,6 +126,7 @@ class OutdoorTemp:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
+        data = data.loc[(data['Specie']=='Tetrachloroethene')]
 
         g = sns.regplot(
             x="OutdoorTemp",
@@ -141,8 +143,8 @@ class OutdoorTemp:
 
         plt.show()
         return
-#Season()
-#Snow()
-#AC()
-#Heating()
+Season()
+Snow()
+AC()
+Heating()
 OutdoorTemp()
