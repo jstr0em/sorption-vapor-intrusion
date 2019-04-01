@@ -155,8 +155,46 @@ class OutdoorTemp:
 
         #plt.show()
         return
+
+class Correlations:
+    def __init__(self):
+
+        data = pd.read_csv('./data/indianapolis.csv')
+        data = data.loc[(data['Specie']=='Chloroform')]
+
+        print(list(data))
+
+        cols = [
+            'logIndoorConcentration',
+            'IndoorOutdoorPressure',
+            'OutdoorTemp',
+            'Rain',
+            'WindSpeed',
+            'IndoorHumidity',
+            'OutdoorHumidity',
+            'SnowDepth',
+            'BarometricPressure',
+        ]
+
+
+        corr = data[cols].corr()
+
+        fig, ax = plt.subplots(dpi=300)
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)
+        sns.heatmap(
+            corr,
+            cmap=cmap,
+            ax=ax,
+            annot=True,
+            fmt='1.1f',
+        )
+        plt.tight_layout()
+        plt.show()
+        return
+
 #Season()
-Snow()
+#Snow()
 #AC()
 #Heating()
 #OutdoorTemp()
+Correlations()
