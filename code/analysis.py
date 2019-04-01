@@ -54,19 +54,22 @@ class Season:
             yticklabels=labels,
         )
 
-        plt.show()
+        plt.savefig('./figures/analysis/season.png', dpi=300)
+        plt.savefig('./figures/analysis/season.pdf', dpi=300)
+
+        #plt.show()
         return
 
 class Snow:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Season']=='Winter') & (data['Specie']=='Tetrachloroethene')]
+        data = data.loc[(data['Specie']=='Chloroform')]
 
         g = sns.boxplot(
             x="SnowDepth",
             y="logIndoorConcentration",
-            #hue="Specie",
+            hue="Season",
             data=data,
         )
 
@@ -75,19 +78,21 @@ class Snow:
             yticks=ticks,
             yticklabels=labels,
         )
+        plt.savefig('./figures/analysis/snowdepth.png', dpi=300)
+        plt.savefig('./figures/analysis/snowdepth.pdf', dpi=300)
 
-        plt.show()
+        #plt.show()
         return
 
 class AC:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Tetrachloroethene')]
+        data = data.loc[ (data['Specie']=='Chloroform')]
         g = sns.boxplot(
             x="AC",
             y="logIndoorConcentration",
-            #hue="Specie",
+            hue="Season",
             data=data,
         )
 
@@ -96,20 +101,22 @@ class AC:
             yticks=ticks,
             yticklabels=labels,
         )
+        plt.savefig('./figures/analysis/ac.png', dpi=300)
+        plt.savefig('./figures/analysis/ac.pdf', dpi=300)
 
-        plt.show()
+        #plt.show()
         return
 
 class Heating:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Tetrachloroethene')]
+        data = data.loc[(data['Specie']=='Chloroform')]
 
         g = sns.boxplot(
             x="Heating",
             y="logIndoorConcentration",
-            #hue="Specie",
+            hue="Season",
             data=data,
         )
 
@@ -118,15 +125,18 @@ class Heating:
             yticks=ticks,
             yticklabels=labels,
         )
+        plt.savefig('./figures/analysis/heating.png', dpi=300)
+        plt.savefig('./figures/analysis/heating.pdf', dpi=300)
 
-        plt.show()
+        #plt.show()
         return
 
 class OutdoorTemp:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Tetrachloroethene')]
+        data = data.loc[(data['Specie']=='Chloroform')]
+
 
         g = sns.regplot(
             x="OutdoorTemp",
@@ -140,11 +150,13 @@ class OutdoorTemp:
             yticks=ticks,
             yticklabels=labels,
         )
+        plt.savefig('./figures/analysis/outdoor_temp.png', dpi=300)
+        plt.savefig('./figures/analysis/outdoor_temp.pdf', dpi=300)
 
-        plt.show()
+        #plt.show()
         return
-Season()
+#Season()
 Snow()
-AC()
-Heating()
-OutdoorTemp()
+#AC()
+#Heating()
+#OutdoorTemp()
