@@ -192,9 +192,49 @@ class Correlations:
         plt.show()
         return
 
+class DiurnalTemp:
+    def __init__(self):
+        data = pd.read_csv('./data/indianapolis.csv')
+        #data = data.loc[(data['Specie']=='Chloroform')]
+        data['Time'] = data['Time'].apply(pd.to_datetime)
+
+        fig, ax1 = plt.subplots(dpi=300)
+
+        ax2 = ax1.twinx()
+
+        for season in data['Season'].unique():
+
+            diurnal = data.loc[data['Season']==season][['Time','OutdoorTemp','logIndoorConcentration']].groupby(data['Time'].dt.hour).median()
+            diurnal.plot(y='OutdoorTemp',label=season, ax=ax1)
+            diurnal.plot(y='logIndoorConcentration', ax=ax2, style='--', legend=False)
+
+
+        ax1.legend()
+        plt.show()
+        return
+
+class TempCorrelation:
+
+    def __init__(self):
+        data = pd.read_csv('./data/indianapolis.csv').dropna()
+        g = sns.PairGrid(
+            data[['IndoorConcentration','OutdoorTemp','OutdoorHumidity','IndoorHumidity','Season']],
+            hue='Season',
+            diag_sharey=False,
+        )
+
+        g.map_diag(sns.kdeplot, shade=True)
+
+        plt.show()
+        return
+
+
+
 #Season()
 #Snow()
 #AC()
 #Heating()
 #OutdoorTemp()
-Correlations()
+#Correlations()
+#DiurnalTemp()
+TempCorrelation()
