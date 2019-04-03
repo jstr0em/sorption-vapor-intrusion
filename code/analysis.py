@@ -224,7 +224,7 @@ class TempCorrelation:
         )
 
         g.map_diag(sns.kdeplot, shade=True)
-
+        g.map_offdiag(sns.regplot, x_bins=10)
         plt.show()
         return
 
