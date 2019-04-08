@@ -228,7 +228,50 @@ class TempCorrelation:
         plt.show()
         return
 
+class TimePlot:
+    def __init__(self):
+        data = pd.read_csv('./data/indianapolis.csv')
+        data = data.loc[data['Specie']=='Chloroform']
+        data['Time'] = data['Time'].apply(pd.to_datetime)
 
+
+        fig, ax1 = plt.subplots(dpi=300)
+        ax2 = ax1.twinx()
+
+        sns.lineplot(
+            data=data,
+            x='Time', # uses index
+            y='IndoorConcentration',
+            ax=ax1,
+        )
+
+        sns.lineplot(
+            data=data,
+            x='Time',
+            y='Rain',
+            ax=ax2,
+            color='orange',
+        )
+
+        sns.lineplot(
+            data=data,
+            x='Time',
+            y='SnowDepth',
+            ax=ax2,
+            color='red',
+        )
+
+        ax1.set(
+            yscale='log',
+        )
+
+        plt.show()
+
+
+        return
+
+# TODO: Add the soil moisture and temperature to the data (maybe other stuff too). See how these are affected by ambient temperature.
+# TODO: Compare how the indoor concentrations vary in the heated and unheated parts of the duplexes.
 
 #Season()
 #Snow()
@@ -237,4 +280,5 @@ class TempCorrelation:
 #OutdoorTemp()
 #Correlations()
 #DiurnalTemp()
-TempCorrelation()
+#TempCorrelation()
+TimePlot()
