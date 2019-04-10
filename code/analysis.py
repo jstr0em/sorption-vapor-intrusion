@@ -218,13 +218,14 @@ class TempCorrelation:
     def __init__(self):
         data = pd.read_csv('./data/indianapolis.csv').dropna()
         g = sns.PairGrid(
-            data[['IndoorConcentration','OutdoorTemp','OutdoorHumidity','IndoorHumidity','Season']],
+            data[['logIndoorConcentration','OutdoorTemp','OutdoorHumidity','IndoorHumidity','Season']],
             hue='Season',
             diag_sharey=False,
         )
 
         g.map_diag(sns.kdeplot, shade=True)
         g.map_offdiag(sns.regplot, x_bins=10)
+        g = g.add_legend()
         plt.show()
         return
 
@@ -270,6 +271,26 @@ class TimePlot:
 
         return
 
+class SoilTemp:
+    def __init__(self):
+        data = pd.read_csv('./data/indianapolis.csv')
+        data['Time'] = data['Time'].apply(pd.to_datetime)
+
+        #fig, ax1 = plt.subplots()
+
+        data.plot(
+            x='Time',
+            y=['OutdoorTemp', 'SoilTempDepth1.8','SoilTempDepth2.7','SoilTempDepth4.0','SoilTempDepth5.0','logIndoorConcentration'],
+            secondary_y = 'logIndoorConcentration',
+        )
+
+
+
+        #pivot = data.pivot(index='Time', columns='Depth')
+
+        plt.show()
+        return
+
 # TODO: Add the soil moisture and temperature to the data (maybe other stuff too). See how these are affected by ambient temperature.
 # TODO: Compare how the indoor concentrations vary in the heated and unheated parts of the duplexes.
 
@@ -280,5 +301,6 @@ class TimePlot:
 #OutdoorTemp()
 #Correlations()
 #DiurnalTemp()
-#TempCorrelation()
-TimePlot()
+TempCorrelation()
+#TimePlot()
+#SoilTemp()

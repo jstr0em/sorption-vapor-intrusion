@@ -45,6 +45,9 @@ class Indianapolis:
 
         self.db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
         df = self.get_data()
+
+
+        #self.get_soil_temp()
         df.to_csv('./data/indianapolis.csv')
 
 
@@ -65,6 +68,7 @@ class Indianapolis:
             self.get_meteorological_data(),
             self.get_pressure(),
             self.get_obs_status(),
+            self.get_soil_temp(),
         )
 
         for _ in dfs_to_merge:
@@ -80,13 +84,15 @@ class Indianapolis:
 
         return df
 
-    def process_time(self,df):
+    def process_time(self, df, reset_index=True):
         df = df.assign(Time=lambda x: x['StopDate']+' '+x['StopTime'])
         df.drop(columns=['StopDate','StopTime'],inplace=True)
 
         df['Time'] = df['Time'].apply(pd.to_datetime)
         df.sort_values(by=['Time'],inplace=True)
-        df.set_index('Time',inplace=True)
+
+        if reset_index is True:
+            df.set_index('Time',inplace=True)
 
         return df
     def get_meteorological_data(self):
@@ -162,15 +168,6 @@ class Indianapolis:
         ssd = ssd.loc[(ssd['Variable']=='Mitigation') & (ssd['Value']=='not yet installed')]
         return ssd
 
-    def process_time(self,df):
-        df = df.assign(Time=lambda x: x['StopDate']+' '+x['StopTime'])
-        df.drop(columns=['StopDate','StopTime'],inplace=True)
-
-        df['Time'] = df['Time'].apply(pd.to_datetime)
-        df.sort_values(by=['Time'],inplace=True)
-        df.set_index('Time',inplace=True)
-
-        return df
 
     # retrieves the indoor air concentration in 422BaseS or ...N
     def get_indoor_air(self):
@@ -229,6 +226,36 @@ class Indianapolis:
         df = self.process_time(df)
 
         df = df.pivot( columns='Variable', values='Value')
+
+        return df
+
+    def get_soil_temp(self):
+
+        query = "\
+            SELECT \
+                StopDate, StopTime, Value AS SoilTemp, Depth_ft AS Depth \
+            FROM \
+                Soil_Temperature_Data \
+            WHERE \
+                Location = 'MW3'\
+        ;"
+
+
+
+        df = pd.read_sql_query(query, self.db)
+        df = self.process_time(df, reset_index=False)
+        df['Depth'] *= 0.3048
+
+        df = df.pivot_table(index='Time', columns='Depth', values='SoilTemp')
+
+        print(list(df))
+
+        rename = {}
+        for _ in list(df):
+            rename[_] = 'SoilTempDepth%1.1f' % _
+
+
+        df.rename(columns=rename, inplace=True)
 
         return df
 Indianapolis()
