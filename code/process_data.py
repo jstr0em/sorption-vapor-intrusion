@@ -44,11 +44,11 @@ class Indianapolis:
     def __init__(self):
 
         self.db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
-        df = self.get_data()
+        #df = self.get_data()
 
 
-        #self.get_soil_temp()
-        df.to_csv('./data/indianapolis.csv')
+        self.get_indoor_air()
+        #df.to_csv('./data/indianapolis.csv')
 
 
         return
@@ -168,13 +168,16 @@ class Indianapolis:
         ssd = ssd.loc[(ssd['Variable']=='Mitigation') & (ssd['Value']=='not yet installed')]
         return ssd
 
-
     # retrieves the indoor air concentration in 422BaseS or ...N
     def get_indoor_air(self):
-        indoor = pd.read_sql_query(
-            "SELECT StopDate, StopTime, Variable, Value, Location, Depth_ft FROM VOC_Data_SRI_8610_Onsite_GC;",
-            self.db,
-        )
+        query = "\
+            SELECT \
+                StopDate, StopTime, Variable, Value, Location, Depth_ft\
+            FROM \
+                VOC_Data_SRI_8610_Onsite_GC\
+        ;"
+
+        indoor = pd.read_sql_query( query, self.db)
         indoor = self.process_time(indoor)
         indoor = indoor.loc[(indoor['Location']=='422BaseN') | (indoor['Location']=='422BaseS')]
         indoor.rename(
