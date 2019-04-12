@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import sqlite3
 
 def get_log_ticks(start, stop, style='e'):
 
@@ -291,6 +291,46 @@ class SoilTemp:
         plt.show()
         return
 
+
+class BuildingSides:
+    def __init__(self):
+        from process_data import get_dropbox_path
+        db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
+
+        query = "\
+            SELECT \
+                Value AS IndoorConcentration, Location\
+            FROM \
+                VOC_Data_SRI_8610_Onsite_GC\
+            WHERE\
+                Location='420BaseS' OR \
+                Location='420BaseN' OR \
+                Location='422BaseS' OR \
+                Location='422BaseN' \
+        ;"
+
+        data = pd.read_sql_query(query, db).dropna()
+
+        data['IndoorConcentration'] = data['IndoorConcentration'].apply(np.log10)
+
+        fig, ax = plt.subplots(dpi=300)
+        sns.boxplot(
+            x='Location',
+            y='IndoorConcentration',
+            data=data,
+            ax=ax,
+        )
+
+        ticks, labels = get_log_ticks(-2,1,'f')
+
+        ax.set(
+            yticks=ticks,
+            yticklabels=labels,
+        )
+
+
+        plt.show()
+        return
 # TODO: Add the soil moisture and temperature to the data (maybe other stuff too). See how these are affected by ambient temperature.
 # TODO: Compare how the indoor concentrations vary in the heated and unheated parts of the duplexes.
 
@@ -301,6 +341,7 @@ class SoilTemp:
 #OutdoorTemp()
 #Correlations()
 #DiurnalTemp()
-TempCorrelation()
+#TempCorrelation()
 #TimePlot()
 #SoilTemp()
+BuildingSides()
