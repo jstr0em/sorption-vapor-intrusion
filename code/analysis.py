@@ -276,18 +276,24 @@ class SoilTemp:
         data = pd.read_csv('./data/indianapolis.csv')
         data['Time'] = data['Time'].apply(pd.to_datetime)
 
-        #fig, ax1 = plt.subplots()
+        fig, (ax1,ax2) = plt.subplots(2,1,dpi=300,sharex=True)
 
         data.plot(
             x='Time',
-            y=['OutdoorTemp', 'SoilTempDepth1.8','SoilTempDepth2.7','SoilTempDepth4.0','SoilTempDepth5.0','logIndoorConcentration'],
-            secondary_y = 'logIndoorConcentration',
+            y=['OutdoorTemp', 'SoilTempDepth1.8','SoilTempDepth2.7','SoilTempDepth4.0','SoilTempDepth5.0'],
+            ax=ax1,
         )
 
 
+        data.plot(
+            x='Time',
+            y=['OutdoorTemp', 'logIndoorConcentration'],
+            secondary_y = 'logIndoorConcentration',
+            ax=ax2,
+        )
 
-        #pivot = data.pivot(index='Time', columns='Depth')
 
+        ax1.legend(loc='upper right')
         plt.show()
         return
 
@@ -331,6 +337,49 @@ class BuildingSides:
 
         plt.show()
         return
+
+
+class TempPressure:
+    def __init__(self):
+        data = pd.read_csv('./data/indianapolis.csv')
+        data['Time'] = data['Time'].apply(pd.to_datetime)
+        data['TempDiff'] = data['IndoorTemp']-data['OutdoorTemp']
+
+
+
+        fig, ax = plt.subplots(dpi=300)
+
+        data.plot(
+            x='Time',
+            y=['OutdoorTemp','IndoorOutdoorPressure', 'TempDiff'],
+            secondary_y=['IndoorOutdoorPressure','TempDiff'],
+            ax=ax,
+        )
+
+        fig, ax = plt.subplots(dpi=300)
+
+        sns.kdeplot(
+            data=data['OutdoorTemp'].dropna(),
+            data2=data['IndoorOutdoorPressure'].dropna(),
+            ax=ax,
+            shade_lowest=False,
+            shade=True,
+        )
+
+        fig, ax = plt.subplots(dpi=300)
+
+        sns.kdeplot(
+            data=data['TempDiff'].dropna(),
+            data2=data['IndoorOutdoorPressure'].dropna(),
+            ax=ax,
+            shade_lowest=False,
+            shade=True,
+        )
+
+
+
+        plt.show()
+
 # TODO: Add the soil moisture and temperature to the data (maybe other stuff too). See how these are affected by ambient temperature.
 # TODO: Compare how the indoor concentrations vary in the heated and unheated parts of the duplexes.
 
@@ -344,4 +393,5 @@ class BuildingSides:
 #TempCorrelation()
 #TimePlot()
 #SoilTemp()
-BuildingSides()
+#BuildingSides()
+TempPressure()
