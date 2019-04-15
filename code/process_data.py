@@ -41,15 +41,13 @@ def get_season(x):
         return 'Error'
 
 class Indianapolis:
-    def __init__(self):
-
+    def __init__(self, side='422'):
+        self.side = side
         self.db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
-        #df = self.get_data()
 
 
-        self.get_indoor_air()
-        #df.to_csv('./data/indianapolis.csv')
-
+        df = self.get_data()
+        df.to_csv('./data/indianapolis_%s.csv' % side)
 
         return
 
@@ -60,7 +58,7 @@ class Indianapolis:
         ssd = self.get_ssd_status()
         subslab = self.get_subslab() # special because we need to match species
 
-        df = pd.merge_asof(indoor, subslab, left_index=True, right_index=True, by='Specie')
+        df = pd.merge_asof(indoor, subslab, left_index=True, right_index=True, by='Contaminant')
         df = df.loc[(df.index.date>=ssd.index.date.min()) & (df.index.date<=ssd.index.date.max())]
 
         # tuples of dataframes/data to fit to our indoor concentration data
@@ -140,75 +138,89 @@ class Indianapolis:
         )
 
         return df
-
     def get_pressure(self):
-        pressure = pd.read_sql_query(
-            "SELECT StopDate, StopTime, Variable, Value, Location FROM Differential_Pressure_Data;",
-            self.db,
-        )
-        pressure = self.process_time(pressure)
-        pressure = pressure.loc[(pressure['Location']=='422') & (pressure['Variable']=='Basement.Vs.Exterior')]
-        pressure.rename(
-            columns={
-                'Value': 'IndoorOutdoorPressure',
-            },
-            inplace=True,
-        )
-        #pressure['IndoorOutdoorPressure'] *= -1 # changing sign to my convention (wasn't it needed?)
-        pressure.drop(columns=['Variable','Location'],inplace=True)
-        return pressure
+        query = " \
+            SELECT \
+                StopDate, \
+                StopTime, \
+                Variable, \
+                Value \
+            FROM \
+                Differential_Pressure_Data \
+            WHERE \
+                Location = '%s' AND \
+                (Variable = 'Basement.Vs.Exterior' OR Variable = 'SubSlab.Vs.Basement') \
+        ;" % self.side
 
+        df = pd.read_sql_query(query, self.db)
+        df = self.process_time(df, reset_index=False)
+
+        df = df.pivot_table(index='Time', columns='Variable', values='Value')
+
+        rename = {
+            'Basement.Vs.Exterior': 'IndoorOutdoorPressure',
+            'SubSlab.Vs.Basement': 'SubslabPressure',
+        }
+
+        df.rename(columns=rename, inplace=True)
+
+        return df
     def get_ssd_status(self):
-        ssd = pd.read_sql_query(
-            "SELECT StopDate, StopTime, Variable, Value FROM Observation_Status_Data;",
-            self.db,
-        )
+        query = "\
+            SELECT \
+                StopDate, \
+                StopTime, \
+                Value AS Mitigation \
+            FROM \
+                Observation_Status_Data \
+            WHERE \
+                Mitigation = 'not yet installed' \
+        ;"
+
+        ssd = pd.read_sql_query(query, self.db)
 
         ssd = self.process_time(ssd)
-        ssd = ssd.loc[(ssd['Variable']=='Mitigation') & (ssd['Value']=='not yet installed')]
         return ssd
-
-    # retrieves the indoor air concentration in 422BaseS or ...N
     def get_indoor_air(self):
         query = "\
             SELECT \
-                StopDate, StopTime, Variable, Value, Location, Depth_ft\
+                StopDate, \
+                StopTime, \
+                Variable AS Contaminant, \
+                Value AS IndoorConcentration \
             FROM \
-                VOC_Data_SRI_8610_Onsite_GC\
-        ;"
+                VOC_Data_SRI_8610_Onsite_GC \
+            WHERE \
+                Location = '%sBaseS' AND \
+                Depth_ft = 'Basement' \
+        ;" % self.side
 
-        indoor = pd.read_sql_query( query, self.db)
+        indoor = pd.read_sql_query(query, self.db)
         indoor = self.process_time(indoor)
-        indoor = indoor.loc[(indoor['Location']=='422BaseN') | (indoor['Location']=='422BaseS')]
-        indoor.rename(
-            columns={
-                #'Variable': 'IndoorSpecie',
-                'Variable': 'Specie',
-                'Value': 'IndoorConcentration',
-            },
-            inplace=True,
-        )
-        indoor.drop(columns=['Depth_ft','Location'],inplace=True)
+
         return indoor
-
     def get_subslab(self):
-        subslab = pd.read_sql_query(
-            "SELECT StopDate, StopTime, Variable, Value, Location, Depth_ft FROM VOC_Data_SRI_8610_Onsite_GC;",
-            self.db,
-        )
-        subslab = self.process_time(subslab)
-        subslab = subslab.loc[(subslab['Location']=='SSP-4')]
-        subslab.rename(
-            columns={
-                #'Variable': 'SubslabSpecie',
-                'Variable': 'Specie',
-                'Value': 'SubslabConcentration',
-            },
-            inplace=True,
-        )
-        subslab.drop(columns=['Depth_ft','Location'],inplace=True)
-        return subslab
+        # port selection based on building side
+        ports = {
+            '420': 'SSP-7',
+            '422': 'SSP-4',
+        }
 
+        query = "\
+            SELECT \
+                StopDate, \
+                StopTime, \
+                Variable AS Contaminant, \
+                Value AS SubslabConcentration \
+            FROM \
+                VOC_Data_SRI_8610_Onsite_GC \
+            WHERE \
+                Location = '%s' \
+        ;" % ports[self.side]
+
+        subslab = pd.read_sql_query(query, self.db)
+        subslab = self.process_time(subslab)
+        return subslab
     def get_obs_status(self):
         query = " \
             SELECT \
@@ -228,37 +240,34 @@ class Indianapolis:
 
         df = self.process_time(df)
 
-        df = df.pivot( columns='Variable', values='Value')
+        df = df.pivot(columns='Variable', values='Value')
 
         return df
 
     def get_soil_temp(self):
-
         query = "\
             SELECT \
-                StopDate, StopTime, Value AS SoilTemp, Depth_ft AS Depth \
+                StopDate, \
+                StopTime, \
+                Value AS SoilTemp, \
+                Depth_ft AS Depth \
             FROM \
                 Soil_Temperature_Data \
             WHERE \
                 Location = 'MW3'\
         ;"
 
-
-
         df = pd.read_sql_query(query, self.db)
         df = self.process_time(df, reset_index=False)
         df['Depth'] *= 0.3048
 
         df = df.pivot_table(index='Time', columns='Depth', values='SoilTemp')
-
-        print(list(df))
-
         rename = {}
         for _ in list(df):
             rename[_] = 'SoilTempDepth%1.1f' % _
 
-
         df.rename(columns=rename, inplace=True)
 
         return df
-Indianapolis()
+Indianapolis(side='422')
+Indianapolis(side='420')
