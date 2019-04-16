@@ -44,7 +44,7 @@ class Season:
         g = sns.boxplot(
             x="Season",
             y="logIndoorConcentration",
-            hue="Specie",
+            hue="Contaminant",
             data=data,
         )
 
@@ -64,7 +64,7 @@ class Snow:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Chloroform')]
+        data = data.loc[(data['Contaminant']=='Chloroform')]
 
         g = sns.boxplot(
             x="SnowDepth",
@@ -88,7 +88,7 @@ class AC:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[ (data['Specie']=='Chloroform')]
+        data = data.loc[ (data['Contaminant']=='Chloroform')]
         g = sns.boxplot(
             x="AC",
             y="logIndoorConcentration",
@@ -111,7 +111,7 @@ class Heating:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Chloroform')]
+        data = data.loc[(data['Contaminant']=='Chloroform')]
 
         g = sns.boxplot(
             x="Heating",
@@ -135,13 +135,13 @@ class OutdoorTemp:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Chloroform')]
+        data = data.loc[(data['Contaminant']=='Chloroform')]
 
 
         g = sns.regplot(
             x="OutdoorTemp",
             y="logIndoorConcentration",
-            #hue="Specie",
+            #hue="Contaminant",
             data=data,
         )
 
@@ -160,7 +160,7 @@ class Correlations:
     def __init__(self):
 
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Specie']=='Chloroform')]
+        data = data.loc[(data['Contaminant']=='Chloroform')]
 
         print(list(data))
 
@@ -195,7 +195,7 @@ class Correlations:
 class DiurnalTemp:
     def __init__(self):
         data = pd.read_csv('./data/indianapolis.csv')
-        #data = data.loc[(data['Specie']=='Chloroform')]
+        #data = data.loc[(data['Contaminant']=='Chloroform')]
         data['Time'] = data['Time'].apply(pd.to_datetime)
 
         fig, ax1 = plt.subplots(dpi=300)
@@ -232,7 +232,7 @@ class TempCorrelation:
 class TimePlot:
     def __init__(self):
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[data['Specie']=='Chloroform']
+        data = data.loc[data['Contaminant']=='Chloroform']
         data['Time'] = data['Time'].apply(pd.to_datetime)
 
 
@@ -299,41 +299,30 @@ class SoilTemp:
 
 
 class BuildingSides:
+    # TODO: Add class methods for each analysis step?
     def __init__(self):
-        from process_data import get_dropbox_path
-        db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
+        data = pd.read_csv('./data/indianapolis.csv')
+        data = data.loc[(data['Contaminant']=='Chloroform')]
 
-        query = "\
-            SELECT \
-                Value AS IndoorConcentration, Location\
-            FROM \
-                VOC_Data_SRI_8610_Onsite_GC\
-            WHERE\
-                Location='420BaseS' OR \
-                Location='420BaseN' OR \
-                Location='422BaseS' OR \
-                Location='422BaseN' \
-        ;"
 
-        data = pd.read_sql_query(query, db).dropna()
+        #data['Side'] = data['Side'].apply(str)
+        # TODO: Catplots for the different contaminant concentrations in both the sides here?
 
-        data['IndoorConcentration'] = data['IndoorConcentration'].apply(np.log10)
-
-        fig, ax = plt.subplots(dpi=300)
-        sns.boxplot(
-            x='Location',
-            y='IndoorConcentration',
-            data=data,
-            ax=ax,
+        print(data['Side'].dtype)
+        # TODO: Fix the plotting of the 'side' column. Perhaps will help to make it into a string? Hasn't worked very well so far though.
+        g = sns.PairGrid(
+            data=data[['logIndoorConcentration', 'SubslabPressure','OutdoorHumidity','OutdoorTemp', 'Side']],
+            hue='Side',
+            diag_sharey=False,
         )
 
-        ticks, labels = get_log_ticks(-2,1,'f')
 
-        ax.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
+        g.map_diag(sns.kdeplot, shade=True)
+        g.map_offdiag(sns.regplot, x_bins=15)
 
+        g.add_legend()
+
+        # TODO: Correlational studies here?
 
         plt.show()
         return
@@ -380,8 +369,6 @@ class TempPressure:
 
         plt.show()
 
-# TODO: Add the soil moisture and temperature to the data (maybe other stuff too). See how these are affected by ambient temperature.
-# TODO: Compare how the indoor concentrations vary in the heated and unheated parts of the duplexes.
 
 #Season()
 #Snow()
@@ -393,5 +380,5 @@ class TempPressure:
 #TempCorrelation()
 #TimePlot()
 #SoilTemp()
-#BuildingSides()
-TempPressure()
+BuildingSides()
+#TempPressure()
