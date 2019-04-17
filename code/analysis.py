@@ -3,38 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sqlite3
+from utils import get_log_ticks
 
-def get_log_ticks(start, stop, style='e'):
-
-    ticks = np.array([])
-    ints = np.arange(np.floor(start),np.ceil(stop)+1)
-    for int_now in ints:
-        ticks = np.append(ticks, np.arange(0.1,1.1,0.1)*10.0**int_now)
-        ticks = np.unique(ticks)
-
-
-    if style=='e':
-        labels = ['%1.1e' % tick for tick in ticks]
-        ticks_to_keep = ['%1.1e' % 10**int for int in ints]
-    elif style=='f':
-        labels = ['%1.12f' % tick for tick in ticks]
-        ticks_to_keep = ['%1.12f' % 10**int for int in ints]
-
-    ticks = np.log10(ticks)
-
-    labels = list(map(lambda x: x.rstrip('0'), labels))
-    ticks_to_keep = list(map(lambda x: x.rstrip('0'), ticks_to_keep))
-
-    for i, label in enumerate(labels):
-
-        if label in ticks_to_keep:
-            #print('Not removing label')
-            continue
-        else:
-            #print('Removing label')
-            labels[i] = ' '
-    # TODO: add more logic to keep first zero after . i.e. 1. -> 1.0
-    return ticks, labels
 
 class Season:
     def __init__(self):
@@ -217,6 +187,7 @@ class TempCorrelation:
 
     def __init__(self):
         data = pd.read_csv('./data/indianapolis.csv').dropna()
+
         g = sns.PairGrid(
             data[['logIndoorConcentration','OutdoorTemp','OutdoorHumidity','IndoorHumidity','Season']],
             hue='Season',
@@ -302,31 +273,88 @@ class BuildingSides:
     # TODO: Add class methods for each analysis step?
     def __init__(self):
         data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Contaminant']=='Chloroform')]
+        self.data = data.loc[(data['Contaminant']=='Chloroform')]
 
 
-        #data['Side'] = data['Side'].apply(str)
+        self.data['Side'] = data['Side'].apply(str)
         # TODO: Catplots for the different contaminant concentrations in both the sides here?
 
-        print(data['Side'].dtype)
+        self.indoor_concentration_catplot()
+        self.correlation()
         # TODO: Fix the plotting of the 'side' column. Perhaps will help to make it into a string? Hasn't worked very well so far though.
-        g = sns.PairGrid(
-            data=data[['logIndoorConcentration', 'SubslabPressure','OutdoorHumidity','OutdoorTemp', 'Side']],
-            hue='Side',
-            diag_sharey=False,
-        )
 
-
-        g.map_diag(sns.kdeplot, shade=True)
-        g.map_offdiag(sns.regplot, x_bins=15)
-
-        g.add_legend()
 
         # TODO: Correlational studies here?
 
         plt.show()
         return
 
+    def indoor_concentration_catplot(self):
+        fig, ax = plt.subplots(dpi=300)
+
+        sns.boxplot(
+            data=self.data,
+            x='Season',
+            y='logIndoorConcentration',
+            hue='Side',
+            ax=ax,
+            whis=10,
+        )
+
+
+        ticks, labels = get_log_ticks(-2,0,'f')
+
+        ax.set(
+            yticks=ticks,
+            yticklabels=labels,
+        )
+
+        return
+
+    def correlation(self):
+
+        data = self.data
+        cols = [
+            'logIndoorConcentration',
+            'SubslabPressure',
+            'OutdoorTemp',
+            'Rain',
+            'WindSpeed',
+            'IndoorHumidity',
+            'OutdoorHumidity',
+            'SnowDepth',
+            'BarometricPressure',
+        ]
+
+
+        fig, (ax1, ax2) = plt.subplots(1,2,sharey=True,dpi=300)
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)
+        sns.heatmap(
+            data.loc[data['Side']=='420'][cols].corr(),
+            cmap=cmap,
+            ax=ax1,
+            annot=True,
+            fmt='1.1f',
+        )
+
+        ax1.set(
+            title='420',
+        )
+
+        sns.heatmap(
+            data.loc[data['Side']=='422'][cols].corr(),
+            cmap=cmap,
+            ax=ax2,
+            annot=True,
+            fmt='1.1f',
+        )
+
+        ax2.set(
+            title='422',
+        )
+
+        plt.tight_layout()
+        return
 
 class TempPressure:
     def __init__(self):
