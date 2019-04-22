@@ -273,14 +273,14 @@ class BuildingSides:
     # TODO: Add class methods for each analysis step?
     def __init__(self):
         data = pd.read_csv('./data/indianapolis.csv')
+        data['Time'] = data['Time'].apply(pd.to_datetime)
         self.data = data.loc[(data['Contaminant']=='Chloroform')]
 
-
-        self.data['Side'] = data['Side'].apply(str)
-        # TODO: Catplots for the different contaminant concentrations in both the sides here?
-
+        self.indoor_concentration_timeplot()
         self.indoor_concentration_catplot()
         self.correlation()
+
+        plt.show()
         # TODO: Fix the plotting of the 'side' column. Perhaps will help to make it into a string? Hasn't worked very well so far though.
 
 
@@ -289,24 +289,57 @@ class BuildingSides:
         plt.show()
         return
 
+    def indoor_concentration_timeplot(self):
+
+        fig, (ax1, ax2) = plt.subplots(2,1,sharex=True,dpi=300)
+
+        sns.lineplot(
+            data=self.data,
+            x='Time',
+            y='IndoorConcentration',
+            hue='Side',
+            ax=ax1,
+        )
+
+        ax1.set(yscale='log')
+
+        sns.lineplot(
+            data=self.data,
+            x='Time',
+            y='SubslabPressure',
+            hue='Side',
+            ax=ax2,
+        )
+
+        return
+
     def indoor_concentration_catplot(self):
-        fig, ax = plt.subplots(dpi=300)
+        fig, (ax1, ax2) = plt.subplots(1,2,dpi=300)
 
         sns.boxplot(
             data=self.data,
             x='Season',
             y='logIndoorConcentration',
             hue='Side',
-            ax=ax,
+            ax=ax1,
             whis=10,
         )
 
 
         ticks, labels = get_log_ticks(-2,0,'f')
 
-        ax.set(
+        ax1.set(
             yticks=ticks,
             yticklabels=labels,
+        )
+
+        sns.boxplot(
+            data=self.data,
+            x='Season',
+            y='SubslabPressure',
+            hue='Side',
+            ax=ax2,
+            whis=1e3,
         )
 
         return
@@ -330,7 +363,7 @@ class BuildingSides:
         fig, (ax1, ax2) = plt.subplots(1,2,sharey=True,dpi=300)
         cmap = sns.diverging_palette(220, 10, as_cmap=True)
         sns.heatmap(
-            data.loc[data['Side']=='420'][cols].corr(),
+            data.loc[data['Side']=='Unheated'][cols].corr(),
             cmap=cmap,
             ax=ax1,
             annot=True,
@@ -338,11 +371,11 @@ class BuildingSides:
         )
 
         ax1.set(
-            title='420',
+            title='Unheated',
         )
 
         sns.heatmap(
-            data.loc[data['Side']=='422'][cols].corr(),
+            data.loc[data['Side']=='Heated'][cols].corr(),
             cmap=cmap,
             ax=ax2,
             annot=True,
@@ -350,7 +383,7 @@ class BuildingSides:
         )
 
         ax2.set(
-            title='422',
+            title='Heated',
         )
 
         plt.tight_layout()
