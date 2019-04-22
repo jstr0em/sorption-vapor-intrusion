@@ -53,7 +53,8 @@ class Indianapolis:
         for self.side in ('420', '422'):
             df = self.get_data() # gets dataframe for one side
             df.to_csv('./data/indianapolis_%s.csv' % self.side) # saves that dataframe
-            df['Side'] = np.repeat(self.side, len(df)) # adds new column telling us which side the data belongs to
+            side_naming = {'420': 'Unheated', '422': 'Heated'}
+            df['Side'] = np.repeat(side_naming[self.side], len(df)) # adds new column telling us which side the data belongs to
             dfs.append(df) # appends the dataframe
 
         pd.concat(dfs, sort=False).to_csv('./data/indianapolis.csv') # concats the two sides dataframes and saves the data
