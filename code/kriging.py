@@ -46,6 +46,7 @@ X = np.array([
 """
 #y = np.array([0.5, 1.5, 4.5, 3, 2, 6]) # observation data
 
+# TODO: Lookup if specific values are use for geophysics
 gpr = GaussianProcessRegressor() # regressor function
 gpr.fit(X, y)
 
