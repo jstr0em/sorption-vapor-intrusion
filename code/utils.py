@@ -1,5 +1,5 @@
 import numpy as np
-
+import os 
 def get_log_ticks(start, stop, style='e'):
 
     def smart_strip(str):
@@ -40,3 +40,15 @@ def get_log_ticks(start, stop, style='e'):
 
     labels = smart_strip(labels)
     return ticks, labels
+
+
+dropbox_folder = None
+def get_dropbox_path():
+    for dirname, dirnames, filenames in os.walk(os.path.expanduser('~')):
+        for subdirname in dirnames:
+            if(subdirname == 'Dropbox'):
+                dropbox_folder = os.path.join(dirname, subdirname)
+                break
+        if dropbox_folder:
+            break
+    return dropbox_folder

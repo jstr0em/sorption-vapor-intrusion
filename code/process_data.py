@@ -4,18 +4,7 @@ import sqlite3
 import seaborn as sns
 import os
 import matplotlib.pyplot as plt
-
-# method that finds the dropbox install directory
-dropbox_folder = None
-def get_dropbox_path():
-    for dirname, dirnames, filenames in os.walk(os.path.expanduser('~')):
-        for subdirname in dirnames:
-            if(subdirname == 'Dropbox'):
-                dropbox_folder = os.path.join(dirname, subdirname)
-                break
-        if dropbox_folder:
-            break
-    return dropbox_folder
+from utils import get_dropbox_path
 
 def get_season(x):
     if x in (12, 1, 2):
