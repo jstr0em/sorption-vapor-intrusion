@@ -47,16 +47,24 @@ class Data():
 class Kriging():
     def __init__(self, data):
 
+        data = data.dropna() # TODO: Dynamically detect NaNs and update probe locations based on that...
+
         probe_locations = self.assign_locations(data)
         #observations = self.assign_observations(data.iloc[1])
-        observations = data.iloc[-1].values
 
         x1, x2, grid = self.get_meshgrid()
 
-        prediction = self.kriging(probe_locations, observations, grid)
+        predictions = {}
 
-        self.plot_results(x1, x2, prediction)
+        for i, time in enumerate(data.index):
+            observations = data.iloc[i].values
+            prediction = self.kriging(probe_locations, observations, grid)
+            predictions[str(time.date())] = prediction
+
+
+        self.plot_results(x1, x2, predictions)
         return
+
 
     def load_probes(self):
         probes = pd.read_csv('./data/indianapolis_probes.csv')
@@ -82,8 +90,10 @@ class Kriging():
 
     def kriging(self, probe_locations, observations, grid):
 
-        # TODO: Lookup if specific values are use for geophysics
-        gpr = GaussianProcessRegressor() # regressor function
+        from sklearn.gaussian_process.kernels import Matern
+
+        # TODO: Lookup if specific values are use for geophysics or which kernel is best (might need to make a custom one)
+        gpr = GaussianProcessRegressor(kernel=Matern()) # regressor function
         gpr.fit(probe_locations, observations)
 
         y_pred = gpr.predict(grid) # predicts values onto the grid
@@ -98,10 +108,40 @@ class Kriging():
         grid = np.vstack([x1.reshape(x1.size), x2.reshape(x2.size)]).T # stacks gridpoints
         return x1, x2, grid
 
-    def plot_results(self, x1, x2, y_pred):
+    def plot_results(self, x1, x2, predictions):
+        from matplotlib import animation
+        times, plot_data = [], []
 
-        plt.contourf(x1, x2, y_pred)
-        plt.show()
+        for key, val in predictions.items():
+            times.append(key)
+            plot_data.append(val)
+
+        vmin, vmax = 0, 30
+
+        print(vmax)
+        kw = dict(levels=np.linspace(vmin, vmax, 10), cmap='jet', vmin=vmin, vmax=vmax, origin='lower')
+
+        fig, ax = plt.subplots()
+        #ax = plt.axes(xlim=(0, x1.max()), ylim=(0, x2.max()))
+        cont = ax.contourf(x1, x2, plot_data[0], **kw)
+
+        cbar = plt.colorbar(cont)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        # animation function
+        def animate(i):
+            ax.clear()
+            cont = ax.contourf(x1, x2, plot_data[i], **kw)
+            ax.set_title(times[i])
+
+            return cont
+
+        anim = animation.FuncAnimation(fig, animate, interval=500)
+
+        anim.save('animation.mp4')
+
+        #plt.contourf(x1, x2, y_pred)
+        #plt.show()
 
 
         return
