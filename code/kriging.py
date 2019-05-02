@@ -2,56 +2,93 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 import pandas as pd
-from utils import get_dropbox_path
+
 import sqlite3
 
 
-class Data():
-    # TODO: Analyze to see if data is normally distributed, if not perform relevant transformation (see Pocket link)
+class Data:
+    # static variable
+    m_in_ft = 0.3048
     def __init__(self):
-        query = " \
-            SELECT \
-                StopDate, \
-                Value AS Concentration, \
-                Location \
-            FROM \
-                VOC_Data_SoilGas_and_Air \
-            WHERE \
-                Variable = 'Chloroform' AND \
-                Depth_ft = 3.5 AND \
-                (Location = 'SGP1' OR \
-                Location = 'SGP2' OR \
-                Location = 'SGP3' OR \
-                Location = 'SGP4' OR \
-                Location = 'SGP5' OR \
-                Location = 'SGP6' OR \
-                Location = 'SGP7') \
-        ;"
-        db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
-        data = pd.read_sql_query(query, db)
-        data['StopDate'] = data['StopDate'].apply(pd.to_datetime)
-        # TODO: Make sure the pivoting doesn't misrepresent any values
-        data = pd.pivot_table(
-            data,
-            index='StopDate',
-            columns='Location',
-            values='Concentration',
-            aggfunc=np.max,
-        ).interpolate()
-
-
-        self.data = data
+        from utils import get_dropbox_path
+        self.db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
         return
 
+    @staticmethod
+    def get_depths():
+        depths = [3.5, 6.0, 9.0, 13.0, 16.5]
+        #depths['m'] = list(map(lambda x: x*m_in_ft, depths['ft']))
 
-class Kriging():
-    def __init__(self, data):
+        return depths
 
-        data = data.dropna() # TODO: Dynamically detect NaNs and update probe locations based on that...
+    def get_data(self,depth=3.5, interpolate=False):
+        depths = self.get_depths()
 
-        probe_locations = self.assign_locations(data)
+        print(self.m_in_ft)
+
+
+        dfs = []
+
+        for depth in depths:
+            query = " \
+                SELECT \
+                    StopDate, \
+                    Value AS Concentration, \
+                    Location \
+                FROM \
+                    VOC_Data_SoilGas_and_Air \
+                WHERE \
+                    Variable = 'Chloroform' AND \
+                    Depth_ft = %f AND \
+                    (Location = 'SGP1' OR \
+                    Location = 'SGP2' OR \
+                    Location = 'SGP3' OR \
+                    Location = 'SGP4' OR \
+                    Location = 'SGP5' OR \
+                    Location = 'SGP6' OR \
+                    Location = 'SGP7') \
+            ;" % depth
+
+            df = pd.read_sql_query(query, self.db)
+            df['StopDate'] = df['StopDate'].apply(pd.to_datetime)
+            # TODO: Make sure the pivoting doesn't misrepresent any values
+            df = pd.pivot_table(
+                df,
+                index='StopDate',
+                columns='Location',
+                values='Concentration',
+                aggfunc=np.max,
+            ).reset_index()
+
+            df['Depth'] = np.repeat(depth*self.m_in_ft,len(df))
+
+            if interpolate is False:
+                continue
+            elif interpolate is True:
+                df = df.interpolate()
+            else:
+                raise ValueError('Interpolate option must be boolean.')
+
+            dfs.append(df)
+        # todo: figure out why it doesnt concatenate
+        data = pd.concat(dfs)
+
+        return data
+
+class Kriging(Data):
+    def __init__(self):
+        data_processing = Data()
+
+        #depths = data_processing.get_depths()
+        data = data_processing.get_data() # TODO: Dynamically detect NaNs and update probe locations based on that...
+
+        print(data.iloc[3:5])
+
+        #probe_locations = self.get_probe_locations(data.iloc[3])
         #observations = self.assign_observations(data.iloc[1])
+        #print(probe_locations)
 
+        """
         x1, x2, grid = self.get_meshgrid()
 
         predictions = {}
@@ -62,19 +99,24 @@ class Kriging():
             predictions[str(time.date())] = prediction
 
 
-        self.plot_results(x1, x2, predictions)
+        print(grids)
+        """
+        #self.plot_results(x1, x2, predictions)
         return
 
 
-    def load_probes(self):
+    def load_probes_coordinates(self):
         probes = pd.read_csv('./data/indianapolis_probes.csv')
         return probes
 
-    def assign_locations(self, data):
+    def get_probe_locations(self, data):
 
-        probes = self.load_probes()
+        # loads the probe coordinates
+        probes = self.load_probes_coordinates()
+        # list to store the active probe locations
         probe_locations = []
-        for loc in list(data):
+
+        for loc in data.dropna().index:
             probe_locations.append(probes.loc[probes['Location']==loc][['x','y']].values[0])
 
         probe_locations = np.array(probe_locations)
@@ -136,9 +178,11 @@ class Kriging():
 
             return cont
 
-        anim = animation.FuncAnimation(fig, animate, interval=500)
 
-        anim.save('animation.mp4')
+        FFwriter = animation.FFMpegWriter()
+        anim = animation.FuncAnimation(fig, animate, interval=500)
+        print(FFwriter.bin_path())
+        anim.save('animation.mp4', writer=FFwriter)
 
         #plt.contourf(x1, x2, y_pred)
         #plt.show()
@@ -146,4 +190,4 @@ class Kriging():
 
         return
 
-Kriging(Data().data)
+Kriging()
