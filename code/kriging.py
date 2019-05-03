@@ -2,37 +2,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 import pandas as pd
-
+import itertools
 import sqlite3
-
+from math import isnan
+from sklearn.gaussian_process.kernels import ConstantKernel, RBF, Matern
+from utils import get_dropbox_path
 
 class Data:
     # static variable
     m_in_ft = 0.3048
     def __init__(self):
-        from utils import get_dropbox_path
         self.db = sqlite3.connect(get_dropbox_path() + '/var/Indianapolis.db')
         return
 
     @staticmethod
     def get_depths():
         depths = [3.5, 6.0, 9.0, 13.0, 16.5]
-        #depths['m'] = list(map(lambda x: x*m_in_ft, depths['ft']))
-
         return depths
 
     def get_data(self,depth=3.5, interpolate=False):
-        depths = self.get_depths()
+        depths = self.get_depths() # gets the unique probe depth values
 
-        print(self.m_in_ft)
-
-
-        dfs = []
-
+        dfs = [] # list to store dataframes that will be concatenated
         for depth in depths:
+            # query
             query = " \
                 SELECT \
-                    StopDate, \
+                    StopDate AS Date, \
                     Value AS Concentration, \
                     Location \
                 FROM \
@@ -48,13 +44,13 @@ class Data:
                     Location = 'SGP6' OR \
                     Location = 'SGP7') \
             ;" % depth
-
+            # read data from database
             df = pd.read_sql_query(query, self.db)
-            df['StopDate'] = df['StopDate'].apply(pd.to_datetime)
+            df['Date'] = df['Date'].apply(pd.to_datetime)
             # TODO: Make sure the pivoting doesn't misrepresent any values
             df = pd.pivot_table(
                 df,
-                index='StopDate',
+                index='Date',
                 columns='Location',
                 values='Concentration',
                 aggfunc=np.max,
@@ -62,16 +58,12 @@ class Data:
 
             df['Depth'] = np.repeat(depth*self.m_in_ft,len(df))
 
-            if interpolate is False:
-                continue
-            elif interpolate is True:
+            if interpolate is True:
                 df = df.interpolate()
-            else:
-                raise ValueError('Interpolate option must be boolean.')
 
             dfs.append(df)
-        # todo: figure out why it doesnt concatenate
-        data = pd.concat(dfs)
+
+        data = pd.concat(dfs).reset_index(drop=True)
 
         return data
 
@@ -79,18 +71,16 @@ class Kriging(Data):
     def __init__(self):
         data_processing = Data()
 
-        #depths = data_processing.get_depths()
         data = data_processing.get_data() # TODO: Dynamically detect NaNs and update probe locations based on that...
 
-        print(data.iloc[3:5])
 
-        #probe_locations = self.get_probe_locations(data.iloc[3])
-        #observations = self.assign_observations(data.iloc[1])
-        #print(probe_locations)
-
+        coords, vals = self.get_coords_vals(data[data['Date']=='2011-01-07'])
+        x1, x2, x3, grid = self.get_meshgrid()
+        pred = self.kriging(coords, vals, grid)
+        print(pred)
+        predictions, grids = {}, {}
         """
-        x1, x2, grid = self.get_meshgrid()
-
+        for time in data['Date'].unique():
         predictions = {}
 
         for i, time in enumerate(data.index):
@@ -106,49 +96,52 @@ class Kriging(Data):
 
 
     def load_probes_coordinates(self):
-        probes = pd.read_csv('./data/indianapolis_probes.csv')
-        return probes
+        probe_coords = pd.read_csv('./data/indianapolis_probes.csv')
+        return probe_coords
 
-    def get_probe_locations(self, data):
-
+    def get_coords_vals(self, data):
         # loads the probe coordinates
-        probes = self.load_probes_coordinates()
-        # list to store the active probe locations
-        probe_locations = []
+        probe_coords = self.load_probes_coordinates()
+        # list to store the active probe coordinates and associated values
+        coords, vals = [], []
 
-        for loc in data.dropna().index:
-            probe_locations.append(probes.loc[probes['Location']==loc][['x','y']].values[0])
+        depths = data['Depth'].unique()
+        locations = list(data)[1:-1] # only loads the location names (first col is always date and last is always depth)
 
-        probe_locations = np.array(probe_locations)
-        return probe_locations
+        for depth in depths:
+            for loc in locations:
+                probe_val = data.loc[data['Depth']==depth][loc].values[0] # current probe value
+                # checks if the probe value is nan, if yes, skips those coords and vals
+                if isnan(probe_val):
+                    continue
+                else:
+                    xy = probe_coords.loc[probe_coords['Location']==loc][['x','y']].values[0].tolist()
+                    z = [depth]
+                    coords.append(xy + z)
+                    vals.append(probe_val)
 
-    def assign_observations(self, data):
-        obs = []
-        for loc in list(data):
-            obs.append(data[loc].values[0])
+        coords = np.array(coords)
+        vals = np.array(vals)
+        return coords, vals
 
-        obs = np.array(obs)
-        return obs
-
-    def kriging(self, probe_locations, observations, grid):
-
-        from sklearn.gaussian_process.kernels import Matern
-
+    def kriging(self, coords, vals, grid):
         # TODO: Lookup if specific values are use for geophysics or which kernel is best (might need to make a custom one)
-        gpr = GaussianProcessRegressor(kernel=Matern()) # regressor function
-        gpr.fit(probe_locations, observations)
 
-        y_pred = gpr.predict(grid) # predicts values onto the grid
-        y_pred = y_pred.reshape((self.res, self.res)) # reshapes predicted values
+        kernel = ConstantKernel()*RBF()
+        gpr = GaussianProcessRegressor(kernel=kernel) # regressor function
+        gpr.fit(coords, vals)
 
-        return y_pred
+        pred = gpr.predict(grid) # predicts values onto the grid
+        pred = pred.reshape((self.res, self.res, 50)) # reshapes predicted values
+
+        return pred
 
     def get_meshgrid(self):
         res = 200 # prediction resolution
         self.res = res
-        x1, x2 = np.meshgrid(np.linspace(0, 25, res), np.linspace(0, 25, res)) # grid to predict values onto
-        grid = np.vstack([x1.reshape(x1.size), x2.reshape(x2.size)]).T # stacks gridpoints
-        return x1, x2, grid
+        x1, x2, x3 = np.meshgrid(np.linspace(0, 25, res), np.linspace(0, 25, res), np.linspace(0, 6, 50)) # grid to predict values onto
+        grid = np.vstack([x1.reshape(x1.size), x2.reshape(x2.size), x3.reshape(x3.size)]).T # stacks gridpoints
+        return x1, x2, x3, grid
 
     def plot_results(self, x1, x2, predictions):
         from matplotlib import animation
