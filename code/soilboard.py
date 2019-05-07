@@ -2,7 +2,7 @@ from plotly.offline import download_plotlyjs, init_notebook_mode,  iplot, plot
 from kriging import Kriging
 import numpy as np
 
-"""
+
 def get_lims_colors(surfacecolor):# color limits for a slice
     return np.min(surfacecolor), np.max(surfacecolor)
 
@@ -108,8 +108,42 @@ class Slices:
 
         fig=dict(data=[base_trace], layout=layout, frames=frames)
 
-        plot(fig, validate=False, filename='soil_slice.html')
+
+        self.data = [base_trace]
+        self.layout = layout
+        self.frames = frames
+        #plot(fig, validate=False, filename='soil_slice.html')
         return
 
-Slices()
-"""
+
+
+
+graph = Slices()
+
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+app.layout = html.Div(children=[
+    html.H1(children='Hello Dash'),
+
+    html.Div(children='''
+        Dash: A web application framework for Python.
+    '''),
+
+    dcc.Graph(
+        id='example-graph',
+        figure={
+            'data': graph.data,
+            'layout': graph.layout,
+            'frames': graph.frames
+        }
+    )
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
