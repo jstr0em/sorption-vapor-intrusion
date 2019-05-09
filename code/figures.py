@@ -105,26 +105,64 @@ class Meeting:
         df = df[df['Contaminant']=='Chloroform']
 
         cmap = sns.diverging_palette(220, 10, as_cmap=True)
-        fig, axes = plt.subplots(1,2,sharey=True)
+        fig, (ax1, ax2) = plt.subplots(1,2,sharey=True,figsize=(10,5))
 
-        for ax, side in zip(axes, df['Side'].unique()):
 
-            sns.heatmap(
-                df.loc[df['Side']==side][cols].corr(),
-                cmap=cmap,
-                ax=ax,
-                annot=True,
-                fmt='1.1f',
-            )
+        sns.heatmap(
+            df.loc[df['Side']=='Unheated'][cols].corr(),
+            cmap=cmap,
+            cbar=False,
+            ax=ax1,
+            annot=True,
+            fmt='1.1f',
+        )
 
-            ax.set(
-                title=side + ' side',
-            )
+        ax1.set(
+            title='Unheated',
+        )
+        ax1.tick_params(axis='x', rotation=45)
 
-        plt.show()
+        sns.heatmap(
+            df.loc[df['Side']=='Heated'][cols].corr(),
+            cmap=cmap,
+            ax=ax2,
+            annot=True,
+            fmt='1.1f',
+        )
+
+        ax2.set(
+            title='Heated',
+        )
+        ax2.tick_params(axis='x', rotation=45)
+
+        plt.tight_layout()
+        dpi = 500
+        plt.savefig('./figures/correlation_heatmap.pdf', dpi=dpi)
+        plt.savefig('./figures/correlation_heatmap.png', dpi=dpi)
+
+        return
+
+    def pressure(self):
+        df = self.data
+        df = df[(df['Contaminant']=='Chloroform') & (df['Side']=='Heated')]
+
+        g = sns.PairGrid(
+            df,
+            x_vars=['BarometricPressure','WindSpeed','OutdoorTemp','OutdoorHumidity'],
+            y_vars=['IndoorConcentration','IndoorOutdoorPressure','IndoorTemp','IndoorHumidity'],
+            diag_sharey=False,
+        )
+
+        g.map(sns.regplot, x_bins=10)
+
+        plt.tight_layout()
+        dpi = 500
+        plt.savefig('./figures/outdoor_factor_pairgrid.pdf', dpi=dpi)
+        plt.savefig('./figures/outdoor_factor_pairgrid.png', dpi=dpi)
 
         return
 
 meeting_plots = Meeting()
 #meeting_plots.heated_vs_unheated()
-meeting_plots.correlations()
+#meeting_plots.correlations()
+meeting_plots.pressure()
