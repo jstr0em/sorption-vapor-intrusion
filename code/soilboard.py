@@ -25,7 +25,7 @@ class Slices:
                 )
 
         frames = []
-        frame_zval = np.linspace(0,6, 50)
+        frame_zval = np.linspace(0,-6, 50)
         for k in range(frame_zval.shape[0]):
             surfcol=pred.T[k]
             cmin, cmax=get_lims_colors(surfcol)
@@ -112,5 +112,7 @@ class Slices:
         self.data = [base_trace]
         self.layout = layout
         self.frames = frames
-        #plot(fig, validate=False, filename='soil_slice.html')
+        plot(fig, validate=False, filename='soil_slice.html')
         return
+
+Slices()

@@ -56,7 +56,7 @@ class Data:
                 aggfunc=np.max,
             ).reset_index()
 
-            df['Depth'] = np.repeat(depth*self.m_in_ft,len(df))
+            df['Depth'] = np.repeat(-depth*self.m_in_ft,len(df))
 
             if interpolate is True:
                 df = df.interpolate()
@@ -147,7 +147,7 @@ class Kriging(Data):
     def get_meshgrid(self):
         res = 200 # prediction resolution
         self.res = res
-        x1, x2, x3 = np.meshgrid(np.linspace(0, 25, res), np.linspace(0, 25, res), np.linspace(0, 6, 50)) # grid to predict values onto
+        x1, x2, x3 = np.meshgrid(np.linspace(0, 25, res), np.linspace(0, 25, res), np.linspace(0, -6, 50)) # grid to predict values onto
         grid = np.vstack([x1.reshape(x1.size), x2.reshape(x2.size), x3.reshape(x3.size)]).T # stacks gridpoints
         return x1, x2, x3, grid
 
