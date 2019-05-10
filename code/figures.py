@@ -220,7 +220,7 @@ class Meeting:
             'OutdoorTemp',
             'OutdoorHumidity',
             'WindSpeed',
-            'Rain',
+            'BarometricPressure',
         ]
         for col, ax in zip(bottom_cols, axes.flatten()[2:]):
             sns.boxplot(
@@ -246,8 +246,8 @@ class Meeting:
         return
 
 meeting_plots = Meeting()
-meeting_plots.concentration_timeseries()
+#meeting_plots.concentration_timeseries()
 #meeting_plots.heated_vs_unheated()
 #meeting_plots.correlations()
 #meeting_plots.pressure()
-#meeting_plots.seasonal_distributions()
+meeting_plots.seasonal_distributions()
