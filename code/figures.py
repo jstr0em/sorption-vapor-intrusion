@@ -14,6 +14,36 @@ class Meeting:
 
         return
 
+    def concentration_timeseries(self):
+        df = self.data
+        fig, axes = plt.subplots(2,1,sharex=True,sharey=True,figsize=(9,6))
+
+
+        for ax, side in zip(axes, df['Side'].unique()):
+            sns.lineplot(
+                data=df[df['Side']==side],
+                x='Time',
+                y='IndoorConcentration',
+                hue='Contaminant',
+                ax=ax,
+            )
+
+            ax.set(
+                title=side,
+                yscale='log',
+                ylabel='$\\mathrm{c_{in}} \; \\mathrm{(\\mu g/L)}$',
+            )
+
+
+
+        axes[1].legend().remove()
+        plt.tight_layout()
+        dpi = 500
+        plt.savefig('./figures/concentration_timeseries.pdf', dpi=dpi)
+        plt.savefig('./figures/concentration_timeseries.png', dpi=dpi)
+        return
+
+
     def heated_vs_unheated(self):
 
         df = self.data
@@ -162,7 +192,62 @@ class Meeting:
 
         return
 
+    def seasonal_distributions(self):
+
+        df = self.data
+        df = df[df['Contaminant']=='Chloroform']
+
+
+        top_cols = [
+            'IndoorConcentration',
+            'SubslabPressure',
+
+        ]
+        fig, axes = plt.subplots(3,2,figsize=(7,9))
+
+
+        for col, ax in zip(top_cols, axes.flatten()[0:2]):
+
+            sns.boxplot(
+                data=df,
+                x='Season',
+                y=col,
+                hue='Side',
+                ax=ax,
+                whis=1e3,
+            )
+        bottom_cols = [
+            'OutdoorTemp',
+            'OutdoorHumidity',
+            'WindSpeed',
+            'Rain',
+        ]
+        for col, ax in zip(bottom_cols, axes.flatten()[2:]):
+            sns.boxplot(
+                data=df,
+                x='Season',
+                y=col,
+                ax=ax,
+                whis=1e6,
+            )
+
+        ax1 = axes.flatten()[0]
+        ax2 = axes.flatten()[1]
+        ax2.set(
+            ylim=[-2,5],
+        )
+        ax1.legend(loc='upper left')
+        ax2.legend().remove()
+        plt.tight_layout()
+        dpi = 500
+        plt.savefig('./figures/seasonal_distributions.pdf', dpi=dpi)
+        plt.savefig('./figures/seasonal_distributions.png', dpi=dpi)
+
+        return
+
 meeting_plots = Meeting()
+meeting_plots.concentration_timeseries()
 #meeting_plots.heated_vs_unheated()
 #meeting_plots.correlations()
-meeting_plots.pressure()
+#meeting_plots.pressure()
+#meeting_plots.seasonal_distributions()
