@@ -37,29 +37,61 @@ class Slices:
 
         base_trace.update(cmin=vmin, cmax=vmax)
 
+        dates = ['2011-03-12','2013-04-04',]
 
-
-        sliders=[dict(steps= [dict(method= 'animate',#Sets the Plotly method to be called when the
-                                                        #slider value is changed.
-                                   args= [[ 'frame{}'.format(k) ],#Sets the arguments values to be passed to
-                                                                      #the Plotly method set in method on slide
-                                          dict(mode= 'immediate',
-                                          frame= dict( duration=50, redraw= False ),
-                                                   transition=dict( duration= 0)
-                                                  )
-                                            ],
-                                    label='{:.2f}'.format(frame_zval[k])
-                                     ) for k in range(frame_zval.shape[0])],
-                        transition= dict(duration= 0 ),
-                        x=0,#slider starting position
-                        y=0,
-                        currentvalue=dict(font=dict(size=12),
-                                          prefix='z: ',
-                                          visible=True,
-                                          xanchor= 'center'
-                                         ),
-                        len=1.0)#slider length)
-                   ]
+        sliders = [
+            # depth slider
+            dict(
+                steps=[
+                    dict(
+                        method='animate',
+                        args=[
+                            ['frame{}'.format(k)],
+                            dict(
+                                mode='immediate',
+                                frame=dict(duration=50, redraw=False),
+                                transition=dict(duration=0),
+                                )
+                            ],
+                        label='{:.2f}'.format(frame_zval[k])
+                    ) for k in range(frame_zval.shape[0])
+                ],
+                transition=dict(duration=0),
+                x=0,#slider starting position
+                y=0,
+                currentvalue=dict(
+                    font=dict(size=12),
+                    prefix='z: ',
+                    visible=True,
+                    xanchor='center',
+                ),
+                len=1,
+            ),
+            # time slider
+            dict(
+                steps=[
+                    dict(
+                        method='rebuild',
+                        arg=[
+                            'frame{}'.format(k),
+                            dict(
+                                frame=dict(duration=50, redraw=False),
+                                transition=dict(duration=0),
+                            ),
+                        ],
+                        label='%s' % dates[k],
+                    ) for k in range(len(dates))
+                ],
+                transition=dict(duration=0),
+                currentvalue=dict(
+                    font=dict(size=12),
+                    prefiz='t: ',
+                    visible=True,
+                    yanchor='right',
+                ),
+                len=1,
+            ),
+        ]
 
 
         axis = dict(showbackground=True,
@@ -71,7 +103,7 @@ class Slices:
 
         layout = dict(
                  title='Slices in volumetric data',
-            font=dict(family='Balto'),
+                 font=dict(family='Balto'),
                  width=600,
                  height=600,
                  scene=dict(xaxis=(axis),
@@ -82,27 +114,7 @@ class Slices:
                                              z=1
                                              ),
                             ),
-                 updatemenus=[dict(type='buttons', showactive=False,
-                                        y=1,
-                                        x=1.3,
-                                        xanchor='right',
-                                        yanchor='top',
-                                        pad=dict(t=0, r=10),
-                                        buttons=[dict(label='Play',
-                                                      method='animate',
-                                                      args=[None,
-                                                            dict(frame=dict(duration=30,
-                                                                            redraw=False),
-                                                                 transition=dict(duration=0),
-                                                                 fromcurrent=True,
-                                                                 mode='immediate'
-                                                                )
-                                                           ]
-                                                     )
-                                                ]
-                                       )
-                                  ],
-            sliders=sliders
+                sliders=sliders,
                 )
 
 
