@@ -29,13 +29,13 @@ class Slices:
         for k in range(frame_zval.shape[0]):
             surfcol=pred.T[k]
             cmin, cmax=get_lims_colors(surfcol)
-            vmin=min([cmin, vmin])
-            vmax=max([cmax, vmax])
+            vmin=max([cmin, vmin])
+            vmax=min([cmax, vmax])
             frames.append(dict(data=[dict(z=x3.T[k],
                                      surfacecolor=pred.T[k])],
                                name='frame{}'.format(k)))
 
-        base_trace.update(cmin=vmin, cmax=vmax)
+            base_trace.update(cmin=vmin, cmax=vmax)
 
         dates = ['2011-03-12','2013-04-04',]
 
