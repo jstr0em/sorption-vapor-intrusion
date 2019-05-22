@@ -2,7 +2,7 @@ from plotly.offline import download_plotlyjs, init_notebook_mode,  iplot, plot
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
-
+from kriging import Kriging, Data
 
 def get_lims_colors(surfacecolor):# color limits for a slice
     return np.min(surfacecolor), np.max(surfacecolor)
@@ -12,59 +12,92 @@ y = np.linspace(0,10,10)
 z = np.linspace(0,5,3)
 
 X, Y, Z = np.meshgrid(x,y,z)
+
+
 C = X**2+Z**2
 
-times = ['2011/03/12','2012/03/12']
+data_inst = Data()
+input_data = data_inst.get_data(interpolate=True)
+times = input_data['Date'].unique()
 
-"""
-iterables = [times, z]
+# only using the first three dates
+
+times = times[[0,5,10]]
+depths = input_data['Depth'].unique()
+
+
+iterables = [times, depths]
 
 index = pd.MultiIndex.from_product(iterables, names=['times', 'depth'])
-# stores data in df
+
 data_to_add = []
 for time in times:
-    for i in range(len(z)):
+    krig = Kriging(input_data[input_data['Date']==time])
+    X, Y, Z, C = krig.x1, krig.x2, krig.x3, krig.pred
+    for depth in depths:
+        i = np.argmin(np.abs(Z[0][0] - depth))
         data_to_add.append(C.T[i])
+
 
 df = pd.Series(data_to_add, index=index)
 
-# df is in the correct format now...
-#print(df[(times[0], z[2])])
+
+# alternative route
 data = []
 for time in times:
-    for depth in z:
+    vmin, vmax = 0, 50
+    for i, depth in enumerate(depths):
+        j = np.argmin(np.abs(Z[0][0] - depth))
         data_now = dict(
             type='surface',
-            surfacecolor=df[time, depth],
-            colorscale='jet',
+            #visible=True,
+            surfacecolor=df[(time, depth)],
+            cmin=vmin,
+            cmax=vmax,
+            z=Z.T[j],
+            x=X.T[0],
+            y=Y.T[0],
+            showscale=False,
+            colorscale='Jet',
         )
 
+        if i % len(depths) == 0:
+            data_now['showscale'] = True
+            #print('Show scale for: ', i)
         data.append(data_now)
 
 
 steps = []
 
-for i in range(len(data)):
+for j, time in enumerate(times):
+    i0 = j*len(depths)
+    iend = (j+1)*len(depths)
     step = dict(
         method='restyle',
-        args=['visible', [False] * len(data_slider)],
-        label='Year {}'.format(i + 1960)
+        args=['visible', [False] * len(data)],
+        label='Time {}'.format(time)
     )
-    step['args'][1][i] = True
+    for i in range(i0,iend):
+        step['args'][1][i] = True
     steps.append(step)
-"""
-# alternative route
-data = []
-for i in range(3):
-    data_now = dict(
-        type='surface',
-        visible=True,
-        surfacecolor=C.T[i],
-        z=Z.T[i],
-        x=X.T[0],
-        y=Y.T[0],
+
+sliders = []
+sliders.append(
+    dict(
+        active=0,
+        currentvalue={'prefix': 'Time: '},
+        pad={'t': 50},
+        steps=steps,
     )
-    data.append(data_now)
+)
 
 
-plot(data,filename='tmp.html')
+layout = dict(
+    title='Slices in volumetric data',
+    sliders=sliders,
+)
+
+fig=dict(data=data, layout=layout)
+
+
+plot(fig,filename='tmp.html')

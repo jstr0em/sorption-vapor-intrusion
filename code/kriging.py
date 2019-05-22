@@ -67,14 +67,16 @@ class Data:
 
         return data
 
-class Kriging(Data):
-    def __init__(self):
+class Kriging():
+    def __init__(self,data):
         data_processing = Data()
 
-        data = data_processing.get_data(interpolate=True)
+        #data = data_processing.get_data(interpolate=True)
 
 
-        coords, vals = self.get_coords_vals(data[data['Date']=='2011-01-07'])
+
+        #coords, vals = self.get_coords_vals(data[data['Date']=='2011-01-07'])
+        coords, vals = self.get_coords_vals(data)
         x1, x2, x3, grid = self.get_meshgrid()
         pred = self.kriging(coords, vals, grid)
         predictions, grids = {}, {}
