@@ -4,26 +4,16 @@ import pandas as pd
 import plotly.graph_objs as go
 from kriging import Kriging, Data
 
-def get_lims_colors(surfacecolor):# color limits for a slice
-    return np.min(surfacecolor), np.max(surfacecolor)
-
-x = np.linspace(0,10,10)
-y = np.linspace(0,10,10)
-z = np.linspace(0,5,3)
-
-X, Y, Z = np.meshgrid(x,y,z)
-
-
-C = X**2+Z**2
 
 data_inst = Data()
 input_data = data_inst.get_data(interpolate=True)
-times = input_data['Date'].unique()
+max_time = pd.read_csv('./data/indianapolis.csv')['Time'].max()
 
-# only using the first three dates
-
-times = times[[0,5,10]]
+input_data = input_data[input_data['Date']<=max_time]
+times = np.sort(input_data['Date'].unique())
 depths = input_data['Depth'].unique()
+
+
 
 
 iterables = [times, depths]
@@ -45,7 +35,10 @@ df = pd.Series(data_to_add, index=index)
 # alternative route
 data = []
 for time in times:
-    vmin, vmax = 0, 50
+    vmin, vmax = 0, np.max(list(df[(time,)]))
+
+    if vmax <= 0.1:
+        continue
     for i, depth in enumerate(depths):
         j = np.argmin(np.abs(Z[0][0] - depth))
         data_now = dict(
@@ -67,9 +60,14 @@ for time in times:
         data.append(data_now)
 
 
+print(len(data))
 steps = []
+j = 0
+for time in times:
+    vmin, vmax = 0, np.max(list(df[(time,)]))
 
-for j, time in enumerate(times):
+    if vmax <= 0.1:
+        continue
     i0 = j*len(depths)
     iend = (j+1)*len(depths)
     step = dict(
@@ -80,6 +78,8 @@ for j, time in enumerate(times):
     for i in range(i0,iend):
         step['args'][1][i] = True
     steps.append(step)
+    j += 1
+
 
 sliders = []
 sliders.append(
@@ -93,7 +93,7 @@ sliders.append(
 
 
 layout = dict(
-    title='Slices in volumetric data',
+    title='Chloroform soil-gas concentration (ug/m^3)',
     sliders=sliders,
 )
 
