@@ -20,7 +20,7 @@ class Data:
         depths = [3.5, 6.0, 9.0, 13.0, 16.5]
         return depths
 
-    def get_data(self,depth=3.5, interpolate=False):
+    def get_data(self,contaminant='Chloroform', interpolate=False):
         depths = self.get_depths() # gets the unique probe depth values
 
         dfs = [] # list to store dataframes that will be concatenated
@@ -34,7 +34,7 @@ class Data:
                 FROM \
                     VOC_Data_SoilGas_and_Air \
                 WHERE \
-                    Variable = 'Chloroform' AND \
+                    Variable = '%s' AND \
                     Depth_ft = %f AND \
                     (Location = 'SGP1' OR \
                     Location = 'SGP2' OR \
@@ -43,7 +43,7 @@ class Data:
                     Location = 'SGP5' OR \
                     Location = 'SGP6' OR \
                     Location = 'SGP7') \
-            ;" % depth
+            ;" % (contaminant ,depth)
             # read data from database
             df = pd.read_sql_query(query, self.db)
             df['Date'] = df['Date'].apply(pd.to_datetime)
