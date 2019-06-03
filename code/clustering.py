@@ -11,7 +11,7 @@ df = pd.read_csv('./data/indianapolis.csv').dropna()
 
 df = df.loc[df['Contaminant']=='Chloroform']
 
-cols = ['OutdoorHumidity','BarometricPressure','OutdoorTemp']
+cols = ['OutdoorHumidity','BarometricPressure','OutdoorTemp','IndoorConcentration']
 
 def assign_quantiles(x):
 
