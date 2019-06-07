@@ -32,13 +32,17 @@ B = (10.85-2.50*np.sqrt(1/M1+1/M2))*1e-4
 P = 1
 
 T = np.linspace(298, 350)
-
 D = B*T**(3/2)*np.sqrt(1/M1+1/M2)/(P*r12**2*I_D(T/epskb12))
 
+X = 2.6
+M_water = 18.01 # g/mol
 
-T_amb = np.array([270.00,290.00, 310.00, 350.00])
-c = np.array([9.0059E-5, 8.7346E-5, 8.4876E-5, 8.0480E-5])
+# needs to return centipoise
+def mu(T):
+    mu = 1.3799566804-0.021224019151*T**1+1.3604562827E-4*T**2-4.6454090319E-7*T**3+8.9042735735E-10*T**4-9.0790692686E-13*T**5+3.8457331488E-16*T**6
+    return mu*1e3
 
-plt.plot(T_amb/T_amb[0], c/c[0])
+D_water = 7.4e-8*(X*M_water)**0.5/Vb1**0.6*T/mu(T)
+D_water *= 1e-4
 
-plt.show()
+print(D_water)
