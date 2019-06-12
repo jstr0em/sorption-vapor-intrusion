@@ -20,7 +20,7 @@ class Data:
         depths = [3.5, 6.0, 9.0, 13.0, 16.5]
         return depths
 
-    def get_data(self,contaminant='Chloroform', interpolate=False):
+    def get_data(self,contaminant='Chloroform', interpolate=False, logtransform=True):
         depths = self.get_depths() # gets the unique probe depth values
 
         dfs = [] # list to store dataframes that will be concatenated
@@ -47,6 +47,9 @@ class Data:
             # read data from database
             df = pd.read_sql_query(query, self.db)
             df['Date'] = df['Date'].apply(pd.to_datetime)
+
+            if logtransform:
+                df['Concentration'] = df['Concentration'].apply(np.log10)
             # TODO: Make sure the pivoting doesn't misrepresent any values
             df = pd.pivot_table(
                 df,
@@ -83,20 +86,8 @@ class Kriging():
 
 
         self.x1, self.x2, self.x3, self.grid = x1, x2, x3, grid
-        self.pred = pred
-        """
-        for time in data['Date'].unique():
-        predictions = {}
+        self.pred = 10**pred
 
-        for i, time in enumerate(data.index):
-            observations = data.iloc[i].values
-            prediction = self.kriging(probe_locations, observations, grid)
-            predictions[str(time.date())] = prediction
-
-
-        print(grids)
-        """
-        #self.plot_results(x1, x2, predictions)
         return
 
     def get_results(self,log=False):
