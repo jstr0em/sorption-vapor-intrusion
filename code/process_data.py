@@ -41,12 +41,12 @@ class Indianapolis:
         dfs = [] # list to store dataframes
         for self.side in ('420', '422'):
             df = self.get_data() # gets dataframe for one side
-            df.to_csv('./data/indianapolis_%s.csv' % self.side) # saves that dataframe
+            df.to_csv('../data/indianapolis_%s.csv' % self.side) # saves that dataframe
             side_naming = {'420': 'Unheated', '422': 'Heated'}
             df['Side'] = np.repeat(side_naming[self.side], len(df)) # adds new column telling us which side the data belongs to
             dfs.append(df) # appends the dataframe
 
-        pd.concat(dfs, sort=False).to_csv('./data/indianapolis.csv') # concats the two sides dataframes and saves the data
+        pd.concat(dfs, sort=False).to_csv('../data/indianapolis.csv') # concats the two sides dataframes and saves the data
         return
 
     def get_data(self):
@@ -107,7 +107,8 @@ class Indianapolis:
                 Variable = 'In.Temp' OR \
                 Variable = 'Bar..' OR \
                 Variable = 'Out.Hum' OR \
-                Variable = 'In.Hum' \
+                Variable = 'In.Hum' OR \
+                Variable = 'Wind.Dir' \
          ;"
 
         df = pd.read_sql_query(
@@ -123,7 +124,8 @@ class Indianapolis:
         df['Temp.Out'] = df['Temp.Out'].apply(f_to_c)
         df['In.Temp'] = df['In.Temp'].apply(f_to_c)
         df['Bar..'] *= 3386.389
-        df['Rain'] *= 2.54
+        df['Rain'] *= 2.54 # convert to
+        df['Wind.Speed'] *= 0.44704 # mph to m/s
 
         df.rename(
             columns={
@@ -133,6 +135,7 @@ class Indianapolis:
                 'Wind.Speed': 'WindSpeed',
                 'Out.Hum': 'OutdoorHumidity',
                 'In.Hum': 'IndoorHumidity',
+                'Wind.Dir': 'WindDir',
             },
             inplace=True,
         )
