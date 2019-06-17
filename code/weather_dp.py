@@ -49,17 +49,20 @@ def get_wind_direction(degree):
 
 df['Cardinal'] = df['WindDir'].apply(get_wind_direction)
 
-df['dP_wind'] = dP_wind(df['WindSpeed'], df['Cardinal'])
+df['dP_wind'] = dP_wind(df['WindSpeed'], np.repeat('S', len(df)))
+
+df['dP_wind_corr'] = dP_wind(df['WindSpeed'], df['Cardinal'])
 
 df['dT'] = df['IndoorTemp'].values - df['OutdoorTemp'].values
 
 df['dP_T'] = dP_T(df['dT'])
 df['dP_combo'] = df['dP_T'].values + df['dP_wind']
+df['dP_combo_corr'] = df['dP_T'].values + df['dP_wind_corr']
 
 
 
 
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2)
+fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2,3, dpi=300, sharex=True, sharey=True)
 
 df.plot(
     x='Time',
@@ -75,17 +78,31 @@ df.plot(
 
 df.plot(
     x='Time',
-    y=['IndoorOutdoorPressure','dP_combo'],
+    y=['IndoorOutdoorPressure','dP_wind_corr'],
     ax=ax3,
 )
 
 df.plot(
     x='Time',
-    y=['IndoorOutdoorPressure','WindDir'],
+    y=['dT', 'WindSpeed'],
     ax=ax4,
 )
 
-fig, (ax1, ax2) = plt.subplots(1,2)
+#ax4.axis('off')
+
+df.plot(
+    x='Time',
+    y=['IndoorOutdoorPressure','dP_combo'],
+    ax=ax5,
+)
+
+df.plot(
+    x='Time',
+    y=['IndoorOutdoorPressure','dP_combo_corr'],
+    ax=ax6,
+)
+
+fig, (ax1, ax2) = plt.subplots(1,2, dpi=300)
 
 sns.boxplot(
     x='Cardinal',
@@ -98,6 +115,28 @@ sns.lineplot(
     x='Cardinal',
     y='WindSpeed',
     data=df,
+    ax=ax2,
+)
+
+fig, (ax1, ax2) = plt.subplots(1,2,dpi=300)
+
+sns.kdeplot(
+    df['IndoorOutdoorPressure'],
+    ax=ax1,
+)
+
+sns.kdeplot(
+    df['dP_combo'],
+    ax=ax1,
+)
+
+sns.kdeplot(
+    df['IndoorOutdoorPressure'],
+    ax=ax2,
+)
+
+sns.kdeplot(
+    df['dP_combo_corr'],
     ax=ax2,
 )
 
