@@ -29,16 +29,15 @@ for col, title, ax in zip(list(df), titles, axes.flatten()):
         title=title,
         legend=False,
     )
+    ax.set(
+        yscale='log',
+    )
 
+axes = axes.flatten()
 
-
-axes.flatten()[0].set(
-    yscale='log',
+axes[1].set(
+    ylim=[1e-3,1e-1]
 )
-axes.flatten()[-1].set(
-    yscale='log',
-)
-
 
 plt.tight_layout()
 plt.show()
