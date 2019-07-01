@@ -10,7 +10,7 @@ df = pd.read_csv('../data/simulation_adsorption_p.csv', header=4, index_col=0)
 print(df)
 
 M = 131.39 # g/mol
-df['c_ads'] *= M # converts to g adsorbate/kg soil
+df['c_ads (mol/kg)'] *= M # converts to g adsorbate/kg soil
 
 fig, axes = plt.subplots(2,2,dpi=300,sharex=True)
 
@@ -35,9 +35,7 @@ for col, title, ax in zip(list(df), titles, axes.flatten()):
 
 axes = axes.flatten()
 
-axes[1].set(
-    ylim=[1e-3,1e-1]
-)
+
 
 plt.tight_layout()
 plt.show()
