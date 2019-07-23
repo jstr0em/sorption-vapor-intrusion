@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-import cantera as ct
 
 def dP_T(dT):
 
@@ -70,7 +69,7 @@ V = 300 # m^3
 rho = 1.276 # kg/m^3
 M = 16.043 # g/mol of CH4
 dH = -891.1 # kJ/mol
-R = ct.gas_constant/1e3
+R = 8.314462618
 eff = 0.8 # efficiency of burner
 
 
