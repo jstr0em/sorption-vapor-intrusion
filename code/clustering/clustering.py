@@ -7,7 +7,7 @@ from sklearn import datasets
 import pandas as pd
 
 
-df = pd.read_csv('./data/indianapolis.csv').dropna()
+df = pd.read_csv('../data/indianapolis.csv').dropna()
 
 df = df.loc[df['Contaminant']=='Chloroform']
 
@@ -27,7 +27,7 @@ df['Percentile'] = df['IndoorConcentration'].apply(assign_quantiles)
 
 est = KMeans(n_clusters=4)
 
-fig = plt.figure(figsize=(4, 3))
+fig = plt.figure(figsize=(4, 3), dpi=300)
 ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
 est.fit(X)
 labels = est.labels_
