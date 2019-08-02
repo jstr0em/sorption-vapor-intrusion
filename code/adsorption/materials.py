@@ -1,43 +1,39 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.integrate import odeint
-from scipy.optimize import leastsq
-
-ppb = 1.12 # ppb
-t_data = np.array([0, 310, 1080, 2614])
-mass_per_mass = np.array([0, 26.3947, 30.2191, 33.1549]) # ng/g
-
-M = 131.38 # g/mol
-rho = 1680e3 # g/m^3
 
 # state variables
 T = 298 # K
 R = 8.31446261815324 # gas constant
 P = 101325 # 1 atm in Pa
 
-c_star = mass_per_mass/rho
-c_air = P*ppb/R/T # ng/m^3
+# adsorption properties
+c_ref = 1.12 # ppb
+c_ref *= P/(R*T) # ng/m^3
+c_ref *= 1e-9 # g/m^3
+#c_star = mass_per_mass/rho
 
-def ode(y, t, k1, k2):
-    return k1*c_air-k2*y
+# house properties
+A_floor = 10*10 # 10x10 m surface
+A_wall = 10*3 # 10 m wide, 3 m tall
+A_room = A_floor*2 + A_wall*4
+V_room = A_floor*3
 
-def solve_ode(t, args):
-    y0 = 0
+# ignoring dust for now
+materials = ['Concrete', 'Drywall', 'Wood', 'Wool Carpet', 'Wall Paper']
 
-    f = lambda y, t: ode(y, t, args[0], args[1])
-    r = odeint(f, t, y0)
-    return r[0]
 
-def f_resid(args):
+penetration_depth = np.array([5e-3, 1e-2, 1e-3, 1e-2, 1e-4])
 
-    r = solve_ode(t, args)
-    resid = c_star - r
-    print(resid)
-    return resid
+rho = np.array([2000, 7.62, 700, 1.3, 1.29]) # kg/m^3
+rho *= 1e3 # g/m^3
 
-t = t_data
 
-guess = (1e2,1e-2) #initial guess for params
-(c,kvg) = leastsq(f_resid, guess) #get para
-print(c)
+capacity = np.array([115.8169e-9, 2e-9, 0.9874e-9, 2.43e-9, 15e-6]) # g adsorbate/g material
+c_star = capacity*rho
+
+K = c_ref/c_star
+
+df = pd.DataFrame({'Material': materials, 'Capacity': capacity, 'rho': rho, 'K': K})
+
+print(df)
