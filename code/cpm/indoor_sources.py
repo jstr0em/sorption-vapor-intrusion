@@ -44,7 +44,7 @@ Ae = 0.5
 V = 300
 K = 1e-2
 k2 = 1e-4
-
+M = 131.38 # g/mol TCE
 A_ck = 4*10*1e-2
 
 n = interp1d(transient['t'].values, transient['j_ck'].values*A_ck*3600*1e2, fill_value=0, bounds_error=False)
@@ -74,7 +74,8 @@ t = np.linspace(0, 72, 100)
 for key, value in config.items():
     K = value[0]
     V_mat = value[1]
-    fig, (ax1, ax2) = plt.subplots(2,1,dpi=300)
+    fig, (ax1, ax2) = plt.subplots(2,1,dpi=300, sharex=True)
+    ax3 = ax2.twinx()
     for k2 in (1e-4, 1e-2, 1, 1e2, 1e4):
         k1 = K*k2
         c0 = [c0_in, c0_in/K]
@@ -82,10 +83,16 @@ for key, value in config.items():
         c_in = c[:,0]
         c_star = c[:,1]
 
-        ax1.semilogy(t,c_in,label='k1 = %1.0e, k2 = %1.0e' % (k1, k2))
-        ax2.semilogy(t,c_star*V_mat,label='k2 = %1.0e' % k2)
+        ax1.semilogy(t,c_in*M,label='k1 = %1.0e, k2 = %1.0e' % (k1, k2))
+        ax2.plot(t,c_star*V_mat*M,label='m_star')
+
+        ax3.semilogy(t,c_in*V*M, linestyle='--')
 
     transient.plot(x='t', y='c_in', ax=ax1, logy=True, legend=False, color='k', label='reference')
-    ax1.set_title('%s, K = %1.0e' % (key, K))
+    ax1.set_title('%s, K = %1.0e, V_mat = %1.2f m^3' % (key, K, V_mat))
+    ax1.set_ylabel('c_in (g/m^3)')
+    ax2.set_ylabel('m_star (g)')
+    ax3.set_ylabel('m_in (g)')
+    ax2.set_xlabel('time (h)')
     ax1.legend()
 plt.show()
