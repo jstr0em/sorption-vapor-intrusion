@@ -105,9 +105,13 @@ for index, row in config.iterrows():
 transient.plot(x='t', y='c_in', ax=ax2, logy=True,
                legend=False, color='k', label='reference')
 
+
 table = config.set_index('material')
+table['k1'] *= M
+table['k2'] *= M
 table = table.applymap("{0:1.2e}".format)
 
+table.rename(columns={'volume': 'V ($\\mathrm{m^3}$)', 'k1': '$k_1$ ($\\mathrm{g/h}$)', 'k2': '$k_2$ ($\\mathrm{g/h}$)'}, inplace=True)
 ax1.axis('off')
 ax1.table(cellText=table.values, colWidths=[0.15] * len(table.columns),
           rowLabels=table.index,
