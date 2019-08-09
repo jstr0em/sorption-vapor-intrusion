@@ -95,6 +95,16 @@ class Kinetics:
         c_star = odeint(self.rate_equation, t=t, y0=0, args=(k1, k2), mxstep=5000)
         return c_star.flatten()
 
+    """
+    Returns the fitted reaction constants
+
+    arg:
+        None
+    return:
+        k1 : desorption rate (mol/hr)
+        k2 : adsorption rate (mol/hr)
+        K : equilibrium constant (1)
+    """
     def get_reaction_constants(self):
         t_data = self.get_time_data()
         c_star_data = self.get_adsorbed_conc()
@@ -105,6 +115,21 @@ class Kinetics:
         K = k1 / k2
         return k1, k2, K
 
+    """
+    Returns the linear adsorption isotherm
+
+    args:
+        None
+    return:
+        K_iso : adsorption isotherm (m^3/kg)
+    """
+    def get_isotherm(self):
+        k1, k2, K = self.get_reaction_constants()
+        rho = self.get_material_density()
+        rho *= 1e-3 # converts to kg/m^3
+        K_iso = 1/(K*rho)
+
+        return K_iso
 
 
     def plot(self,save=False):
@@ -129,26 +154,4 @@ class Kinetics:
         return
 
 soil = Kinetics(material='soil')
-#soil.plot()
-
-
-
-k1, k2, K = soil.get_reaction_constants()
-f = 0.007 # 0.7%  organic content
-rho = soil.get_material_density() # g/m3
-rho /= 1e3 # kg/m3
-
-c = soil.get_gas_conc() # g/m3 in air
-c_star = c*K
-print(c, c_star)
-
-K_d = 1/(K)*rho*1e3 # converts to L gas/kg solid
-
-K_oc = K_d/f
-
-print(K_d, K_oc)
-
-K_d2 = c_star*rho/c*1e3
-K_oc2 = K_d2/f
-
-print(K_d2, K_oc2)
+soil.plot()
