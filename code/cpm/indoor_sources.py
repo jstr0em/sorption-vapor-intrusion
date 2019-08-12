@@ -6,36 +6,45 @@ from scipy.interpolate import interp1d
 from estimate_kinetics import Kinetics
 
 
-
 class IndoorSource(Kinetics):
     def __init__(self, df, material='concrete', contaminant='TCE', T=298, P=101325):
+        super().__init__()
         self.df = df
-        self.material = material
-        self.contaminant = contaminant
-        self.T = T
-        self.P = P
+
+        self.set_building_param()
         return
+
+    def get_air_exchange_rate(self):
+        return self.Ae
 
     def get_df(self):
         return self.df
 
-    def set_building_param(self, Ae=0.5, w_ck=1e-2, xyz=(10, 10, 3)):
-        x, y, z = xyz # x, y, z, dimensions
+    def get_building_volume(self):
+        return self.V
 
-        A_floor = x*y # area of the floor/ceilung
-        A_wall_y = y*z # area of one type of wall
-        A_wall_x = x*z # area of the other type of wall
+    def get_room_area(self):
+        return self.A_room
+
+    def set_building_param(self, Ae=0.5, w_ck=1e-2, xyz=(10, 10, 3)):
+        x, y, z = xyz  # x, y, z, dimensions
+
+        A_floor = x * y  # area of the floor/ceilung
+        A_wall_y = y * z  # area of one type of wall
+        A_wall_x = x * z  # area of the other type of wall
 
         # assigns parameters to class
-        self.V = x * y *z # building/control volume
-        self.A_ck = 2*(x+y)*w_ck # crack area
-        self.A_room = 2*(A_floor+A_wall_y+A_wall_x) # surface area of the room
+        self.V = x * y * z  # building/control volume
+        self.A_ck = 2 * (x + y) * w_ck  # crack area
+        # surface area of the room
+        self.A_room = 2 * (A_floor + A_wall_y + A_wall_x)
+        self.Ae = Ae
         return
 
     def get_crack_area(self):
         return self.A_ck
 
-    def get_time_data(self):
+    def get_t_data(self):
         df = self.get_df()
         return df['t'].values
 
@@ -46,57 +55,93 @@ class IndoorSource(Kinetics):
         else:
             j_ck = df['j_ck'].values
             A_ck = self.get_crack_area()
-            n_ck = j_ck*A_ck # calculates molar entry rate mol/s
-            n_ck *= 3600 # converts to mol/hr
+            n_ck = j_ck * A_ck  # calculates molar entry rate mol/s
+            n_ck *= 3600  # converts to mol/hr
         return n_ck
+
+    def get_initial_concentration(self):
+        df = self.get_df()
+        return df['c_in'].values[0]
+
+    def get_reaction_constants(self):
+        M = self.get_molar_mass()
+        k1, k2, K = super().get_reaction_constants()  # mol/hr
+
+        # mol/hr -> g/hr
+        k1 /= M
+        k2 /= M
+
+        # g/hr -> ug/hr
+        k1 *= 1e6
+        k2 *= 1e6
+        return k1, k2, K
 
     def get_entry_rate(self):
         # gets time and entry rate data
-        t = self.get_time_data()
+        t = self.get_t_data()
         n_ck = self.get_entry_rate_data()
         # interpolation function
         func = interp1d(t, n_ck, bounds_error=False, fill_value=n_ck[0])
         return func
-
-    def get_material():
-        return self.material
 
     def get_material_volume(self):
         material = self.get_material()
 
         A_room = self.get_room_area()
         penetration_depth = self.get_penetration_depth(material)
-
-        V_mat = A_room*penetration_depth
-        return V_mat
+        return A_room * penetration_depth
 
     def get_penetration_depth(self, material):
         material = self.get_material()
         # depth to which contaminant has been adsorbed/penetrated into the material
-        penetration_depth = {'concrete': 5e-3, 'wood': 1e-3, 'drywall': 1e-2, 'carpet': 1e-2, 'paper':1e-4}
+        penetration_depth = {'concrete': 5e-3, 'wood': 1e-3,
+                             'drywall': 1e-2, 'carpet': 1e-2, 'paper': 1e-4}
         return penetration_depth[material]
 
-    def reaction(self, c_in, c_star, k1, k2, K):
-        k1 = K * k2
-        r = k1 * c_star - k2 * c_in
-        return r
+    def reaction(self, c_in, c_star, k1, k2):
+        return k1 * c_star - k2 * c_in
 
-    def cstr(self, u, t, Ae, V, V_mat, k1, k2, K):
+    def cstr(self, u, t, Ae, V, V_mat, k1, k2):
         c_in = u[0]
         c_star = u[1]
-        r = reaction(c_in, c_star, k1, k2, K)
+        r = self.reaction(c_in, c_star, k1, k2)
+        n = self.get_entry_rate()
         dc_in_dt = n(t) / V - Ae * c_in + r / V
         dc_star_dt = -r / V_mat
 
         return [dc_in_dt, dc_star_dt]
 
+    def solve_cstr(self):
+
+        k1, k2, K = self.get_reaction_constants()
+        V_mat = self.get_material_volume()
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+        c0_in = self.get_initial_concentration()
+        c0 = [c0_in, c0_in / K]
+
+        t_data = self.get_t_data()
+
+        t = np.linspace(0, t_data[-1], 200)
+
+        result = odeint(func=self.cstr, y0=c0, t=t, args=(
+            Ae, V, V_mat, k1, k2), mxstep=5000)
+        c, c_star = result[:, 0], result[:, 1]
+        return t, c, c_star
 
 
 df = pd.read_csv('../../data/transient_sandy_loam.csv', header=4)
+new_names2 = ('t', 'p_in', 'alpha', 'c_in', 'j_ck', 'm_ads', 'c_ads')
+
+df.rename(columns=dict(zip(list(df), new_names2)), inplace=True)
 
 x = IndoorSource(df)
-print(x.get_reaction_constants())
 
+
+fig, ax = plt.subplots(dpi=300)
+t, c, c_star = x.solve_cstr()
+ax.semilogy(t, c)
+plt.show()
 
 """
 # everything below here needs to be fixed
