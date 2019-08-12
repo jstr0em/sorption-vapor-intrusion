@@ -7,26 +7,71 @@ from estimate_kinetics import Kinetics
 
 
 
-class IndoorSources:
-
-    def __init__(self, df):
+class IndoorSource(Kinetics):
+    def __init__(self, df, material='concrete', contaminant='TCE', T=298, P=101325):
+        self.df = df
+        self.material = material
+        self.contaminant = contaminant
+        self.T = T
+        self.P = P
         return
+
+    def get_df(self):
+        return self.df
 
     def set_building_param(self, Ae=0.5, w_ck=1e-2, xyz=(10, 10, 3)):
+        x, y, z = xyz # x, y, z, dimensions
 
-        x, y, z = xyz
+        A_floor = x*y # area of the floor/ceilung
+        A_wall_y = y*z # area of one type of wall
+        A_wall_x = x*z # area of the other type of wall
 
+        # assigns parameters to class
         self.V = x * y *z # building/control volume
-        self.A_ck = 2*(x+y)*w_ck
-        A_floor = x*y
-        A_wall_y = y*z
-        A_wall_x = x*z
-
-        self.A_room = 2*(A_floor+A_wall_y+A_wall_x)
-
+        self.A_ck = 2*(x+y)*w_ck # crack area
+        self.A_room = 2*(A_floor+A_wall_y+A_wall_x) # surface area of the room
         return
 
-    def get_penetration_depth(self, material='concrete'):
+    def get_crack_area(self):
+        return self.A_ck
+
+    def get_time_data(self):
+        df = self.get_df()
+        return df['t'].values
+
+    def get_entry_rate_data(self):
+        df = self.get_df()
+        if 'n_ck' in list(df):
+            n_ck = df['n_ck'].values
+        else:
+            j_ck = df['j_ck'].values
+            A_ck = self.get_crack_area()
+            n_ck = j_ck*A_ck # calculates molar entry rate mol/s
+            n_ck *= 3600 # converts to mol/hr
+        return n_ck
+
+    def get_entry_rate(self):
+        # gets time and entry rate data
+        t = self.get_time_data()
+        n_ck = self.get_entry_rate_data()
+        # interpolation function
+        func = interp1d(t, n_ck, bounds_error=False, fill_value=n_ck[0])
+        return func
+
+    def get_material():
+        return self.material
+
+    def get_material_volume(self):
+        material = self.get_material()
+
+        A_room = self.get_room_area()
+        penetration_depth = self.get_penetration_depth(material)
+
+        V_mat = A_room*penetration_depth
+        return V_mat
+
+    def get_penetration_depth(self, material):
+        material = self.get_material()
         # depth to which contaminant has been adsorbed/penetrated into the material
         penetration_depth = {'concrete': 5e-3, 'wood': 1e-3, 'drywall': 1e-2, 'carpet': 1e-2, 'paper':1e-4}
         return penetration_depth[material]
@@ -46,6 +91,14 @@ class IndoorSources:
         return [dc_in_dt, dc_star_dt]
 
 
+
+df = pd.read_csv('../../data/transient_sandy_loam.csv', header=4)
+
+x = IndoorSource(df)
+print(x.get_reaction_constants())
+
+
+"""
 # everything below here needs to be fixed
 def reaction(c_in, c_star, k1, k2, K):
     k1 = K * k2
@@ -178,3 +231,4 @@ ax2.legend()
 
 plt.tight_layout()
 plt.show()
+"""
