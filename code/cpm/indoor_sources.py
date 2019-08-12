@@ -5,33 +5,52 @@ from scipy.integrate import odeint
 from scipy.interpolate import interp1d
 from estimate_kinetics import Kinetics
 
-transient = pd.read_csv('../../data/transient_results.csv', header=4)
-ss = pd.read_csv('../../data/steady_state_material_sweep.csv', header=4)
-
-p = pd.read_csv('../../data/p_cpm.csv', header=4)
-
-p.rename(columns={'Pressure (Pa)': 'p_cpm'}, inplace=True)
-new_names = ('t', 'c_in', 'c_ads', 'm_ads', 'alpha', 'j_sides', 'j_bottom', 'j_ck',
-             'j_d_sides', 'j_d_bottom', 'j_d_ck', 'j_c_sides', 'j_c_bottom', 'j_c_ck', )
-
-new_names2 = ('soil', 'dp', 'c_in', 'c_ads', 'm_ads', 'alpha', 'j_sides', 'j_bottom',
-              'j_ck', 'j_d_sides', 'j_d_bottom', 'j_d_ck', 'j_c_sides', 'j_c_bottom', 'j_c_ck', )
-
-soil_names = {'1': 'Sandy Clay', '2': 'Sand', '3': 'Loamy Sand', }
-
-rename = dict(zip(list(transient), new_names))
-
-transient.rename(columns=rename, inplace=True)
-ss.rename(columns=dict(zip(list(ss), new_names2)), inplace=True)
-transient = pd.concat([transient, p['p_cpm']], axis=1)
-transient['c_ads'] *= 131.38
 
 
+class IndoorSources:
+
+    def __init__(self, df):
+        return
+
+    def set_building_param(self, Ae=0.5, w_ck=1e-2, xyz=(10, 10, 3)):
+
+        x, y, z = xyz
+
+        self.V = x * y *z # building/control volume
+        self.A_ck = 2*(x+y)*w_ck
+        A_floor = x*y
+        A_wall_y = y*z
+        A_wall_x = x*z
+
+        self.A_room = 2*(A_floor+A_wall_y+A_wall_x)
+
+        return
+
+    def get_penetration_depth(self, material='concrete'):
+        # depth to which contaminant has been adsorbed/penetrated into the material
+        penetration_depth = {'concrete': 5e-3, 'wood': 1e-3, 'drywall': 1e-2, 'carpet': 1e-2, 'paper':1e-4}
+        return penetration_depth[material]
+
+    def reaction(self, c_in, c_star, k1, k2, K):
+        k1 = K * k2
+        r = k1 * c_star - k2 * c_in
+        return r
+
+    def cstr(self, u, t, Ae, V, V_mat, k1, k2, K):
+        c_in = u[0]
+        c_star = u[1]
+        r = reaction(c_in, c_star, k1, k2, K)
+        dc_in_dt = n(t) / V - Ae * c_in + r / V
+        dc_star_dt = -r / V_mat
+
+        return [dc_in_dt, dc_star_dt]
+
+
+# everything below here needs to be fixed
 def reaction(c_in, c_star, k1, k2, K):
     k1 = K * k2
     r = k1 * c_star - k2 * c_in
     return r
-
 
 def cstr(u, t, Ae, V, V_mat, k1, k2, K):
     c_in = u[0]
@@ -42,17 +61,48 @@ def cstr(u, t, Ae, V, V_mat, k1, k2, K):
 
     return [dc_in_dt, dc_star_dt]
 
+# preprocess dfs here
 
-# parameters
+transient = pd.read_csv('../../data/transient_results.csv', header=4)
+p = pd.read_csv('../../data/p_cpm.csv', header=4)
+
+p.rename(columns={'Pressure (Pa)': 'p_cpm'}, inplace=True)
+new_names = ('t', 'c_in', 'c_ads', 'm_ads', 'alpha', 'j_sides', 'j_bottom', 'j_ck',
+             'j_d_sides', 'j_d_bottom', 'j_d_ck', 'j_c_sides', 'j_c_bottom', 'j_c_ck', )
+
+new_names2 = ('t', 'p_in', 'alpha', 'c_in', 'j_ck', 'm_ads', 'c_ads')
+
+transient2 = pd.read_csv('../../data/transient_sandy_loam.csv', header=4)
+
+
+soil_names = {'1': 'Sandy Clay', '2': 'Sand', '3': 'Loamy Sand', }
+
+rename = dict(zip(list(transient), new_names))
+
+transient.rename(columns=rename, inplace=True)
+transient = pd.concat([transient, p['p_cpm']], axis=1)
+transient['c_ads'] *= 131.38
+
+transient2.rename(columns=dict(zip(list(transient2), new_names2)), inplace=True)
+
+print(list(transient2))
+
 Ae = 0.5
 V = 300
-M = 131.38  # g/mol TCE
-A_ck = 4 * 10 * 1e-2
+M = 131.38
+A_ck = 4*10*1e-2
 
-n = interp1d(transient['t'].values, transient['j_ck'].values *
+
+transient2['j_ck'] *= 1e-6/M
+transient2['c_in'] *= 1e-6/M
+
+
+
+
+n = interp1d(transient2['t'].values, transient2['j_ck'].values *
              A_ck * 3600 * 1e2, fill_value=0, bounds_error=False)
 c0_in = n(0) / V / Ae
-transient['c_in'] /= transient['c_in'][0] / c0_in
+transient2['c_in'] /= transient2['c_in'][0] / c0_in
 
 
 # house properties
@@ -102,9 +152,10 @@ for index, row in config.iterrows():
     ax3.semilogy(t, c_star * M * V_mat)
     ax4.semilogy(t, c_in * M * V, linestyle='--')
 
-transient.plot(x='t', y='c_in', ax=ax2, logy=True,
+transient2.plot(x='t', y='c_in', ax=ax2, logy=True,
                legend=False, color='k', label='reference')
 
+transient2.plot(x='t', y='m_ads', ax=ax3, color='k', legend=False)
 
 table = config.set_index('material')
 table['k1'] *= M

@@ -153,5 +153,7 @@ class Kinetics:
 
         return
 
+"""
 soil = Kinetics(material='soil')
 soil.plot()
+"""
