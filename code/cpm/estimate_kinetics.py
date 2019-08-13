@@ -15,35 +15,48 @@ class Kinetics:
         self.path = '../../data/adsorption_kinetics.csv'
         return
 
-    def set_organic_content(self):
+    """
+    Method that returns the temperature and pressure of the system.
 
-        material = self.get_material()
-        if material != 'soil':
-            RuntimeError()
-
+    Return:
+        tuple: temperature (K), absolute pressure (Pa)
+    """
     def get_thermo_states(self):
         return self.T, self.P
 
     def get_material(self):
         return self.material
 
+    def get_gas_const(self):
+        return 8.31446261815324
+
     def get_contaminant(self):
         return self.contaminant
+    """
+    Method that converts the air concentration from part by part to mol/m^3
 
-    def get_gas_conc(self):
+    Args:
+        (optional): Part-by-part of the contaminant
+
+    Return:
+        Air concentration (mol/m^3)
+    """
+    def get_gas_conc(self, part_by_part = 1.12e-9):
         # gas constant
-        R = 8.31446261815324  # (J/(mol*K))
+        R = self.get_gas_const()  # (J/(mol*K))
         T, P = self.get_thermo_states()
-        part_by_part = 1.12e-9  # parts of TCE per part of air V_TCE/V_total
-        c = P * part_by_part / (R * T)  # concentration of TCE (g/m^3)
-        return c
+        M = self.get_molar_mass()
+        return P * part_by_part / (R * T * M)
 
+    """
+    Return:
+        Moles of contaminant sorbed unto material (mol/m^3)
+    """
     def get_adsorbed_conc(self):
         mass_by_mass = self.get_adsorption_data()
         rho = self.get_material_density()
         M = self.get_molar_mass()
-        c_star = mass_by_mass * rho / 1e9 / M  # g/m3
-        return c_star
+        return mass_by_mass * rho / 1e9 / M
 
     def get_molar_mass(self):
         contaminant = self.get_contaminant()
@@ -71,15 +84,17 @@ class Kinetics:
         self.path = path
         return
 
+    """
+    Return:
+        Adsorption time data (hr)
+    """
     def get_time_data(self):
         path = self.get_data_path()
         material = self.get_material()
 
         data = pd.read_csv(path)
         data = data.loc[data['material'] == material]
-
-        time = np.append(0, data['time'].values)
-        return time
+        return np.append(0, data['time'].values)/60
 
     def get_adsorption_data(self):
         path = self.get_data_path()
@@ -109,7 +124,7 @@ class Kinetics:
         t_data = self.get_time_data()
         c_star_data = self.get_adsorbed_conc()
 
-        popt, pcov = curve_fit(self.solve_reaction, t_data, c_star_data, p0=[1e-2, 1e-4])
+        popt, pcov = curve_fit(self.solve_reaction, t_data, c_star_data, p0=[1e-2, 1e2])
 
         k1, k2 = popt
         K = k1 / k2
@@ -138,7 +153,8 @@ class Kinetics:
         c_star_data = self.get_adsorbed_conc()
 
         k1, k2, K = self.get_reaction_constants()
-
+        M = self.get_molar_mass()
+        rho = self.get_material_density()
 
 
         t = np.linspace(t_data[0], t_data[-1], 200)
@@ -146,14 +162,16 @@ class Kinetics:
 
         fig, ax = plt.subplots(dpi=300)
 
-        plt.plot(t_data, c_star_data, 'o', label='Data')
-        plt.plot(t, c_star, label='Fit')
+        ax.plot(t_data*60, c_star_data/rho*M*1e9, 'o', label='Data')
+        ax.plot(t*60, c_star/rho*M*1e9, label='Fit')
 
+        ax.set_title('$k_1$ = %1.2e, $k_2$ = %1.2e, $K$ = %1.2e' % (k1, k2, K))
+        plt.legend()
         plt.show()
 
         return
 
 """
-soil = Kinetics(material='soil')
+soil = Kinetics(material='concrete')
 soil.plot()
 """

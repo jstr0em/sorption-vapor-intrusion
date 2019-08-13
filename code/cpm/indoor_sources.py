@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.integrate import odeint
+from scipy.integrate import odeint, ode
 from scipy.interpolate import interp1d
 from estimate_kinetics import Kinetics
 
@@ -9,6 +9,8 @@ from estimate_kinetics import Kinetics
 class IndoorSource(Kinetics):
     def __init__(self, df, material='concrete', contaminant='TCE', T=298, P=101325):
         super().__init__()
+        self.material = material
+        self.contaminant = contaminant
         self.df = df
 
         self.set_building_param()
@@ -48,32 +50,46 @@ class IndoorSource(Kinetics):
         df = self.get_df()
         return df['t'].values
 
+    """
+    Gets the entry rate from the simulation data.
+
+    args:
+        none
+    returns:
+        molar flow rate of contaminant in mol/hr
+    """
     def get_entry_rate_data(self):
         df = self.get_df()
+        M = self.get_molar_mass()
         if 'n_ck' in list(df):
-            n_ck = df['n_ck'].values
+            return df['n_ck'].values*1e-6/M*3600
         else:
             j_ck = df['j_ck'].values
             A_ck = self.get_crack_area()
-            n_ck = j_ck * A_ck  # calculates molar entry rate mol/s
-            n_ck *= 3600  # converts to mol/hr
-        return n_ck
+            #n_ck = j_ck * A_ck  # calculates molar entry rate mol/s
+            #n_ck *= 3600  # converts to mol/hr
+            return j_ck*1e-6/M*3600*A_ck
 
     def get_initial_concentration(self):
         df = self.get_df()
-        return df['c_in'].values[0]
+        n = self.get_entry_rate_data()
+        M = self.get_molar_mass()
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+        return n[0]/(Ae*V)
+        #return df['c_in'].values[0]*1e-6/M
 
     def get_reaction_constants(self):
         M = self.get_molar_mass()
-        k1, k2, K = super().get_reaction_constants()  # mol/hr
+        k1, k2, K = super().get_reaction_constants()  # g/hr
 
-        # mol/hr -> g/hr
+        # g/hr -> mol/hr
         k1 /= M
         k2 /= M
 
         # g/hr -> ug/hr
-        k1 *= 1e6
-        k2 *= 1e6
+        #k1 *= 1e6
+        #k2 *= 1e6
         return k1, k2, K
 
     def get_entry_rate(self):
@@ -81,12 +97,11 @@ class IndoorSource(Kinetics):
         t = self.get_t_data()
         n_ck = self.get_entry_rate_data()
         # interpolation function
-        func = interp1d(t, n_ck, bounds_error=False, fill_value=n_ck[0])
+        func = interp1d(t, n_ck, bounds_error=False, fill_value=n_ck[-1])
         return func
 
     def get_material_volume(self):
         material = self.get_material()
-
         A_room = self.get_room_area()
         penetration_depth = self.get_penetration_depth(material)
         return A_room * penetration_depth
@@ -101,13 +116,17 @@ class IndoorSource(Kinetics):
     def reaction(self, c_in, c_star, k1, k2):
         return k1 * c_star - k2 * c_in
 
-    def cstr(self, u, t, Ae, V, V_mat, k1, k2):
+    def cstr(self, t, u, Ae, V, V_mat, k1, k2):
         c_in = u[0]
         c_star = u[1]
         r = self.reaction(c_in, c_star, k1, k2)
         n = self.get_entry_rate()
         dc_in_dt = n(t) / V - Ae * c_in + r / V
         dc_star_dt = -r / V_mat
+
+        #ax.plot(t,n(t)/V,'bo')
+        #ax.plot(t,-Ae * c_in, 'ro')
+        #ax.plot(t, r / V, 'go')
 
         return [dc_in_dt, dc_star_dt]
 
@@ -121,13 +140,21 @@ class IndoorSource(Kinetics):
         c0 = [c0_in, c0_in / K]
 
         t_data = self.get_t_data()
+        t0, t_end = 0, t_data[-1]
+        t = []
+        c = []
+        c_star = []
 
-        t = np.linspace(0, t_data[-1], 200)
+        r = ode(self.cstr).set_integrator('lsoda', method='bdf', nsteps=5000, max_step=0.2)
+        r.set_initial_value(c0, t0).set_f_params(Ae, V, V_mat, k1, k2)
+        dt = 1
+        while r.successful() and r.t < t_end:
+            t.append(r.t)
+            c.append(r.y[0])
+            c_star.append(r.y[1])
 
-        result = odeint(func=self.cstr, y0=c0, t=t, args=(
-            Ae, V, V_mat, k1, k2), mxstep=5000)
-        c, c_star = result[:, 0], result[:, 1]
-        return t, c, c_star
+            r.integrate(r.t+dt)
+        return np.array(t), np.array(c), np.array(c_star)
 
 
 df = pd.read_csv('../../data/transient_sandy_loam.csv', header=4)
@@ -135,12 +162,18 @@ new_names2 = ('t', 'p_in', 'alpha', 'c_in', 'j_ck', 'm_ads', 'c_ads')
 
 df.rename(columns=dict(zip(list(df), new_names2)), inplace=True)
 
-x = IndoorSource(df)
+materials = ('concrete', 'drywall', 'wood', 'paper', 'carpet')
+
 
 
 fig, ax = plt.subplots(dpi=300)
-t, c, c_star = x.solve_cstr()
-ax.semilogy(t, c)
+
+for material in materials:
+    x = IndoorSource(df, material=material)
+    t, c, c_star = x.solve_cstr()
+    ax.plot(t, c, label=material)
+#ax.semilogy(t, x.get_entry_rate()(t))
+ax.legend()
 plt.show()
 
 """
