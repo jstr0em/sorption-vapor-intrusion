@@ -46,7 +46,7 @@ class Kinetics:
         R = self.get_gas_const()  # (J/(mol*K))
         T, P = self.get_thermo_states()
         M = self.get_molar_mass()
-        return P * part_by_part / (R * T * M)
+        return P * part_by_part / (R * T)
 
     """
     Return:
@@ -142,6 +142,7 @@ class Kinetics:
         k1, k2, K = self.get_reaction_constants()
         rho = self.get_material_density()
         rho *= 1e-3 # converts to kg/m^3
+        print(rho)
         K_iso = 1/(K*rho)
 
         return K_iso
@@ -171,7 +172,10 @@ class Kinetics:
 
         return
 
-"""
-soil = Kinetics(material='concrete')
-soil.plot()
-"""
+
+soil = Kinetics(material='soil')
+
+M = soil.get_molar_mass()
+print(soil.get_gas_conc()*1e6*M)
+#soil.plot()
+#print(soil.get_isotherm())
