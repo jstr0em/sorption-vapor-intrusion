@@ -176,6 +176,6 @@ class Kinetics:
 soil = Kinetics(material='soil')
 
 M = soil.get_molar_mass()
-print(soil.get_gas_conc()*1e6*M)
+#print(soil.get_gas_conc()*1e6*M)
 #soil.plot()
-#print(soil.get_isotherm())
+print(soil.get_isotherm())
