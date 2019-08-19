@@ -56,10 +56,11 @@ class Material:
 
     def get_materials(self):
         return ['drywall', 'concrete', 'carpet', 'wood', 'paper', 'soil']
-"""
-Class to load, process, and return the COMSOL simulation data
-"""
+
 class COMSOL(Data):
+    """
+    Class to load, process, and return the COMSOL simulation data
+    """
     def __init__(self, file):
         Data.__init__(self,file)
         self.process_raw_data()
@@ -106,7 +107,6 @@ class Experiment(Data):
         self.data = pd.read_csv(path)
         return
 
-
 class Kinetics(Experiment, Material, Contaminant):
     def __init__(self, file, material='concrete', contaminant='TCE', T=298, P=101325):
         Experiment.__init__(self, file)
@@ -116,55 +116,56 @@ class Kinetics(Experiment, Material, Contaminant):
         self.T = T
         self.P = P
         return
-    """
-    Method that returns the temperature and pressure of the system.
 
-    Return:
-        tuple: temperature (K), absolute pressure (Pa)
-    """
     def get_thermo_states(self):
+        """
+        Method that returns the temperature and pressure of the system.
+
+        Return:
+            tuple: temperature (K), absolute pressure (Pa)
+        """
         return self.T, self.P
     def get_gas_const(self):
         return 8.31446261815324
 
-
-
-    """
-    Method that converts the air concentration from part by part to mol/m^3
-
-    Args:
-        (optional): Part-by-part of the contaminant
-
-    Return:
-        Air concentration (mol/m^3)
-    """
     def get_gas_conc(self, part_by_part = 1.12e-9):
+        """
+        Method that converts the air concentration from part by part to mol/m^3
+
+        Args:
+            (optional): Part-by-part of the contaminant
+
+        Return:
+            Air concentration (mol/m^3)
+        """
         # gas constant
         R = self.get_gas_const()  # (J/(mol*K))
         T, P = self.get_thermo_states()
         M = self.get_molar_mass()
         return P * part_by_part / (R * T)
 
-    """
-    Return:
-        Moles of contaminant sorbed unto material (mol/m^3)
-    """
+
     def get_adsorbed_conc(self):
+        """
+        Return:
+            Moles of contaminant sorbed unto material (mol/m^3)
+        """
         mass_by_mass = self.get_adsorption_data()
         rho = self.get_material_density()
         M = self.get_molar_mass()
         return mass_by_mass * rho / 1e9 / M
 
 
-    def rate_equation(self, c_star, t, k1, k2):
+    def adsorption_kinetics(self, c_star, t, k1, k2):
         c = self.get_gas_conc()
         r = k1 * c_star - k2 * c
         return -r
-    """
-    Return:
-        Adsorption time data (hr)
-    """
+
     def get_time_data(self):
+        """
+        Return:
+            Adsorption time data (hr)
+        """
         material = self.get_material()
         data = self.get_data()
         data = data.loc[data['material'] == material]
@@ -179,20 +180,20 @@ class Kinetics(Experiment, Material, Contaminant):
         return mass_by_mass
 
     def solve_reaction(self, t, k1, k2):
-        c_star = odeint(self.rate_equation, t=t, y0=0, args=(k1, k2), mxstep=5000)
+        c_star = odeint(self.adsorption_kinetics, t=t, y0=0, args=(k1, k2), mxstep=5000)
         return c_star.flatten()
 
-    """
-    Returns the fitted reaction constants
-
-    arg:
-        None
-    return:
-        k1 : desorption rate (mol/hr)
-        k2 : adsorption rate (mol/hr)
-        K : equilibrium constant (1)
-    """
     def get_reaction_constants(self):
+        """
+        Returns the fitted reaction constants
+
+        arg:
+            None
+        return:
+            k1 : desorption rate (mol/hr)
+            k2 : adsorption rate (mol/hr)
+            K : equilibrium constant (1)
+        """
         t_data = self.get_time_data()
         c_star_data = self.get_adsorbed_conc()
 
@@ -202,22 +203,20 @@ class Kinetics(Experiment, Material, Contaminant):
         K = k1 / k2
         return k1, k2, K
 
-    """
-    Returns the linear adsorption isotherm
 
-    args:
-        None
-    return:
-        K_iso : adsorption isotherm (m^3/kg)
-    """
     def get_isotherm(self):
+        """
+        Returns the linear adsorption isotherm
+
+        args:
+            None
+        return:
+            K_iso : adsorption isotherm (m^3/kg)
+        """
         k1, k2, K = self.get_reaction_constants()
         rho = self.get_material_density()
         rho *= 1e-3 # converts to kg/m^3
-        print(rho)
-        K_iso = 1/(K*rho)
-
-        return K_iso
+        return 1/(K*rho)
 
 
     def plot(self,save=False):
@@ -248,17 +247,16 @@ class Kinetics(Experiment, Material, Contaminant):
 class IndoorSource(COMSOL, Material, Contaminant):
     def __init__(self, file, material='concrete', contaminant='TCE'):
         COMSOL.__init__(self, file)
-        if material != 'none':
+        Contaminant.__init__(self, contaminant)
+        self.set_building_param()
+        self.set_entry_rate()
+
+        if material != None:
             Material.__init__(self, material)
             self.set_material_volume()
         else:
-            self.material = 'none'
-        Contaminant.__init__(self, contaminant)
+            self.material = None
 
-
-        self.set_building_param()
-
-        self.set_entry_rate()
         return
 
     def get_air_exchange_rate(self):
@@ -284,23 +282,9 @@ class IndoorSource(COMSOL, Material, Contaminant):
 
     def get_initial_concentration(self):
         n = self.get_entry_rate()
-        M = self.get_molar_mass()
         Ae = self.get_air_exchange_rate()
         V = self.get_building_volume()
         return n(0)/(Ae*V)
-        #return df['c_in'].values[0]*1e-6/M
-
-    def get_reaction_constants(self, file='../../data/adsorption_kinetics.csv', T=298, P=101325):
-        M = self.get_molar_mass()
-        contaminant = self.get_contaminant()
-        material = self.get_material()
-        rxn = Kinetics(file, material=material, contaminant=contaminant, T=T, P=P)
-        k1, k2, K = rxn.get_reaction_constants()  # g/hr
-
-        # g/hr -> mol/hr
-        k1 /= M
-        k2 /= M
-        return k1, k2, K
 
     def set_entry_rate(self):
         # gets time and entry rate data
@@ -337,43 +321,70 @@ class IndoorSource(COMSOL, Material, Contaminant):
     def reaction(self, c_in, c_star, k1, k2):
         return k1 * c_star - k2 * c_in
 
-    def cstr(self, t, u, Ae, V, V_mat, k1, k2):
+
+    def set_reaction_constants(self, k1, k2, K):
+        self.k1 = k1
+        self.k2 = k2
+        self.K = K
+        return
+
+    def get_reaction_constants(self):
+        return self.k1, self.k2, self.K
+
+    def cstr(self, t, u):
+
+        # gets parameters
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+        V_mat = self.get_material_volume()
+        k1, k2, K = self.get_reaction_constants()
+
+        # loads variables
         c_in = u[0]
         c_star = u[1]
+
+        # assigns reaction and entry rate functions
         r = self.reaction(c_in, c_star, k1, k2)
         n = self.get_entry_rate()
+
+        # odes
         dc_in_dt = n(t) / V - Ae * c_in + r / V
         dc_star_dt = -r / V_mat
 
         return [dc_in_dt, dc_star_dt]
 
-    def cstr_no_indoor_source(self, t, u, Ae, V):
+    def cstr_no_indoor_source(self, t, u):
+
+        # gets parameters
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+
+        # loads variable
         c_in = u
+
+        # assigns entry rate function
         n = self.get_entry_rate()
+
+        # ode
         dc_in_dt = n(t) / V - Ae * c_in
         return dc_in_dt
 
     def solve_cstr(self):
 
-
-        Ae = self.get_air_exchange_rate()
-        V = self.get_building_volume()
         c0_in = self.get_initial_concentration()
 
         t_data = self.get_time_data()
-        t0, t_end = 0, t_data[-1]
+        t0, t_end = t_data[0], t_data[-1]
         t = []
         c = []
 
 
-        if self.get_material() !='none':
+        if self.get_material() != None:
             k1, k2, K = self.get_reaction_constants()
-            V_mat = self.get_material_volume()
             c0 = [c0_in, c0_in / K]
             c_star = []
             r = ode(self.cstr).set_integrator('lsoda', method='bdf', nsteps=5000, max_step=0.2)
-
-            r.set_initial_value(c0, t0).set_f_params(Ae, V, V_mat, k1, k2)
+            r.set_initial_value(c0, t0)
             dt = 1
             while r.successful() and r.t < t_end:
                 t.append(r.t)
@@ -385,8 +396,7 @@ class IndoorSource(COMSOL, Material, Contaminant):
         else:
             c0 = c0_in
             r = ode(self.cstr_no_indoor_source).set_integrator('lsoda', method='bdf', nsteps=5000, max_step=0.2)
-
-            r.set_initial_value(c0, t0).set_f_params(Ae, V)
+            r.set_initial_value(c0, t0)
             dt = 1
             while r.successful() and r.t < t_end:
                 t.append(r.t)
@@ -397,11 +407,11 @@ class IndoorSource(COMSOL, Material, Contaminant):
 
 
 
-
-
-#x = COMSOL('../../data/transient_sandy_loam.csv')
-y = IndoorSource('../../data/transient_results_shuai_isotherm_good_mesh.csv', material='none')
-t, c = y.solve_cstr()
+rxn = Kinetics('../../data/adsorption_kinetics.csv', material='soil')
+k1, k2, K = rxn.get_reaction_constants()
+indoor = IndoorSource('../../data/transient_results_shuai_isotherm_good_mesh.csv', material='concrete')
+indoor.set_reaction_constants(k1, k2, K)
+t, c, c_star = indoor.solve_cstr()
 
 
 plt.plot(t, c)
