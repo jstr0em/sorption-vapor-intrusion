@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.integrate import odeint, ode
+from scipy.integrate import odeint, ode, solve_ivp
 from scipy.optimize import curve_fit, leastsq
 from scipy.interpolate import interp1d
 
@@ -369,12 +369,18 @@ class IndoorSource(COMSOL, Material, Contaminant):
         dc_in_dt = n(t) / V - Ae * c_in
         return dc_in_dt
 
+    def solve_cstr2(self):
+        t = self.get_time_data()
+        c0_in = self.get_initial_concentration()
+        k1, k2, K = self.get_reaction_constants()
+        c0 = [c0_in, c0_in / K]
+        t_tmp = t
+        r = solve_ivp(self.cstr, t_span=(t[0], t[-1]), y0=c0, method='Radau', t_eval=t, max_step=0.1, first_step=0.001, nfev=10000, nlu=10000)
+
+        t, c, c_star = r['t'], r['y'][0], r['y'][1]
+        return t, c, c_star
+
     def solve_cstr(self):
-
-
-
-        mol_m3_to_ug_m3 =
-
         c0_in = self.get_initial_concentration()
 
         t_data = self.get_time_data()
@@ -410,14 +416,23 @@ class IndoorSource(COMSOL, Material, Contaminant):
             return np.array(t), np.array(c)
 
 
+    def get_dataframe(self):
+        df = self.get_data()
+        t, c, c_star = self.solve_cstr2()
+        M = self.get_molar_mass()
 
-rxn = Kinetics('../../data/adsorption_kinetics.csv', material='soil')
-k1, k2, K = rxn.get_reaction_constants()
-indoor = IndoorSource('../../data/transient_results_shuai_isotherm_good_mesh.csv', material='concrete')
-indoor.set_reaction_constants(k1, k2, K)
-t, c, c_star = indoor.solve_cstr()
+        df['c'] = c*M*1e6
+        df['c_star'] = c_star*M*1e6
+        return df
 
 
-plt.plot(t, c)
+class Analysis(IndoorSource):
 
-plt.show()
+    def __init__(self,type):
+
+        IndoorSource.__init__()
+        return
+
+    def save_data(self):
+        # this might be better for now than figuring out everything regarding the class inheritance stuff
+        return
