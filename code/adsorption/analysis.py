@@ -371,6 +371,10 @@ class IndoorSource(COMSOL, Material, Contaminant):
 
     def solve_cstr(self):
 
+
+
+        mol_m3_to_ug_m3 =
+
         c0_in = self.get_initial_concentration()
 
         t_data = self.get_time_data()
