@@ -264,12 +264,11 @@ class IndoorSource(COMSOL, Material, Contaminant):
         self.set_building_param()
         self.set_entry_rate()
 
-        if material is None:
+        if material is 'none':
             self.material = None
         else:
             Material.__init__(self, material)
             self.set_material_volume()
-
         return
 
     def get_air_exchange_rate(self):
@@ -391,9 +390,9 @@ class IndoorSource(COMSOL, Material, Contaminant):
         t = self.get_time_data()
         c0_in = self.get_initial_concentration()
 
-        if self.get_material() is None:
+        if self.get_material() == None:
             r = solve_ivp(self.cstr_no_rxn, t_span=(
-                t[0], t[-1]), y0=[c0_in], method='Radau', t_eval=t, max_step=0.1, first_step=0.001, nfev=10000, nlu=10000)
+                t[0], t[-1]), y0=[c0_in], method='Radau', t_eval=t, max_step=0.1)
             t, c, c_star = r['t'], r['y'][0], np.repeat(0, len(r['y'][0]))
 
             return t, c, c_star
@@ -401,26 +400,47 @@ class IndoorSource(COMSOL, Material, Contaminant):
             k1, k2, K = self.get_reaction_constants()
             c0 = [c0_in, c0_in / K]
             r = solve_ivp(self.cstr, t_span=(t[0], t[-1]), y0=c0, method='Radau',
-                          t_eval=t, max_step=0.1, first_step=0.001, nfev=10000, nlu=10000)
+                          t_eval=t, max_step=0.1)
             t, c, c_star = r['t'], r['y'][0], r['y'][1]
             return t, c, c_star
 
     def get_dataframe(self):
         df = self.get_data()
-        t, c, c_star = self.solve_cstr2()
+        t, c, c_star = self.solve_cstr()
         M = self.get_molar_mass()
         df['c'] = c * M * 1e6
         df['c_star'] = c_star * M * 1e6
         return df
 
 
-class Analysis(IndoorSource):
+class Analysis:
+    def get_indoor_material_data(self):
+        materials = Material('concrete').get_materials()[0:-1]
+        materials.append('none')
 
-    def __init__(self, type):
+        k1s, k2s, Ks = [], [], []
 
-        IndoorSource.__init__()
-        return
+        dfs = []
 
-    def save_data(self):
-        # this might be better for now than figuring out everything regarding the class inheritance stuff
-        return
+        for material in materials:
+            indoor = IndoorSource('../../data/no_soil_adsorption.csv', material=material)
+            if material != 'none':
+                rxn = Kinetics('../../data/adsorption_kinetics.csv', material=material)
+                k1, k2, K = rxn.get_reaction_constants()
+                indoor.set_reaction_constants(k1, k2, K)
+                df = indoor.get_dataframe()
+            else:
+                df = indoor.get_dataframe()
+                k1, k2, K = 0, 0, 0
+            df.sort_values(by='time', inplace=True)
+            df.reset_index(inplace=True)
+            df['material'] = np.repeat(material, len(df))
+            dfs.append(df)
+            k1s.append(k1)
+            k2s.append(k2)
+            Ks.append(K)
+
+        kinetics = pd.DataFrame(index=materials,data={'k1': k1s, 'k2': k2s, 'K': Ks})
+        data = pd.concat(dfs, axis=0, sort=False).set_index(['material','time'])
+
+        return data, kinetics
