@@ -83,9 +83,9 @@ class COMSOL(Data):
         return pd.read_csv(path, header=4)
 
     def get_renaming_scheme(self):
-        renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p', 'alpha (1)': 'alpha',
+        renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p_in', 'alpha (1)': 'alpha',
                     'c_in (ug/m^3)': 'c_in', 'j_ck (ug/(m^2*s))': 'j_ck', 'm_ads (g)': 'm_ads', 'c_ads (mol/kg)': 'c_ads',
-                    'c_ads/c (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck', 'n_ck (ug/s)': 'n_ck', 'c_soil (ug/m^3)': 'c_soil', 'u_ck (cm/h)': 'u_ck'}
+                    'c_ads/c (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck', 'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_soil (ug/m^3)': 'c_soil', 'u_ck (cm/h)': 'u_ck', 'K_ads (m^3/kg)': 'K_ads'}
         return renaming
 
     def process_raw_data(self):
@@ -247,10 +247,12 @@ class Kinetics(Experiment, Material, Contaminant):
 
         fig, ax = plt.subplots(dpi=300)
 
-        ax.plot(t_data * 60, c_star_data / rho * M * 1e9, 'o', label='Data')
-        ax.plot(t * 60, c_star / rho * M * 1e9, label='Fit')
+        ax.plot(t_data * 60, c_star_data / rho * M * 1e9, 'ko', label='Data')
+        ax.plot(t * 60, c_star / rho * M * 1e9, 'k-', label='Fit')
 
-        ax.set_title('$k_1$ = %1.2e, $k_2$ = %1.2e, $K$ = %1.2e' % (k1, k2, K))
+        ax.set(title='Sorption of %s on %s\n$k_1$ = %1.2e (1/hr), $k_2$ = %1.2e (1/hr), $K$ = %1.2e' % (self.get_contaminant().upper(), self.get_material(), k1, k2, K),
+               xlabel='Time (min)', ylabel='Adsorbed mass (ng/g)')
+
         plt.legend()
         plt.show()
 
@@ -414,48 +416,57 @@ class IndoorSource(COMSOL, Material, Contaminant):
 
 
 class Analysis:
+    def get_kinetics_data(self):
+        materials = Material('concrete').get_materials()
+        k1s, k2s, Ks = [], [], []
+
+        for material in materials:
+            kinetics = Kinetics(
+                '../../data/adsorption_kinetics.csv', material=material)
+            k1, k2, K = kinetics.get_reaction_constants()
+            k1s.append(k1)
+            k2s.append(k2)
+            Ks.append(K)
+
+        data = pd.DataFrame(index=materials, data={
+                            'k1': k1s, 'k2': k2s, 'K': Ks})
+        return data
+
     def get_indoor_material_data(self):
         materials = Material('concrete').get_materials()[0:-1]
         materials.append('none')
 
-        k1s, k2s, Ks = [], [], []
-
         dfs = []
 
         for material in materials:
-            indoor = IndoorSource('../../data/no_soil_adsorption.csv', material=material)
+            indoor = IndoorSource(
+                '../../data/no_soil_adsorption.csv', material=material)
             if material != 'none':
-                rxn = Kinetics('../../data/adsorption_kinetics.csv', material=material)
+                rxn = Kinetics(
+                    '../../data/adsorption_kinetics.csv', material=material)
                 k1, k2, K = rxn.get_reaction_constants()
                 indoor.set_reaction_constants(k1, k2, K)
                 df = indoor.get_dataframe()
             else:
                 df = indoor.get_dataframe()
-                k1, k2, K = 0, 0, 0
             df.sort_values(by='time', inplace=True)
             df.reset_index(inplace=True)
             df['material'] = np.repeat(material, len(df))
             dfs.append(df)
-            k1s.append(k1)
-            k2s.append(k2)
-            Ks.append(K)
 
-        kinetics = pd.DataFrame(index=materials,data={'k1': k1s, 'k2': k2s, 'K': Ks})
-        data = pd.concat(dfs, axis=0, sort=False).set_index(['material','time'])
-
-        return data, kinetics
-
+        return pd.concat(dfs, axis=0, sort=False).set_index(['material', 'time'])
 
     def get_soil_data(self):
-
         dfs = []
         path = '../../data/'
 
         for file in ('no_soil_adsorption.csv', 'soil_adsorption.csv'):
-            indoor = IndoorSource(path+file, material='none')
+            indoor = IndoorSource(path + file, material='none')
             df = indoor.get_dataframe()
-            df['soil_adsorption'] = np.repeat(file.strip('.csv'), len(df))
+            df['soil_adsorption'] = np.repeat(file.rstrip('.csv'), len(df))
             dfs.append(df)
 
-        data = pd.concat(dfs, axis=0, sort=False).set_index(['soil_adsorption','time'])
-        return data
+        return pd.concat(dfs, axis=0, sort=False).set_index(['soil_adsorption', 'time'])
+
+    def get_steady_state_data(self):
+        return df = COMSOL(file='../../data/steady_state.csv').get_data().set_index('K_ads')
