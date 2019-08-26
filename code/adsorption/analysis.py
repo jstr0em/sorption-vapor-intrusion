@@ -444,3 +444,18 @@ class Analysis:
         data = pd.concat(dfs, axis=0, sort=False).set_index(['material','time'])
 
         return data, kinetics
+
+
+    def get_soil_data(self):
+
+        dfs = []
+        path = '../../data/'
+
+        for file in ('no_soil_adsorption.csv', 'soil_adsorption.csv'):
+            indoor = IndoorSource(path+file, material='none')
+            df = indoor.get_dataframe()
+            df['soil_adsorption'] = np.repeat(file.strip('.csv'), len(df))
+            dfs.append(df)
+
+        data = pd.concat(dfs, axis=0, sort=False).set_index(['soil_adsorption','time'])
+        return data
