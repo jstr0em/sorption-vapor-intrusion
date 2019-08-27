@@ -85,7 +85,7 @@ class COMSOL(Data):
     def get_renaming_scheme(self):
         renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p_in', 'alpha (1)': 'alpha',
                     'c_in (ug/m^3)': 'c_in', 'j_ck (ug/(m^2*s))': 'j_ck', 'm_ads (g)': 'm_ads', 'c_ads (mol/kg)': 'c_ads',
-                    'c_ads/c (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck', 'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_soil (ug/m^3)': 'c_soil', 'u_ck (cm/h)': 'u_ck', 'K_ads (m^3/kg)': 'K_ads'}
+                    'c_ads/c (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck', 'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_soil (ug/m^3)': 'c_soil', 'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads'}
         return renaming
 
     def process_raw_data(self):
@@ -253,8 +253,7 @@ class Kinetics(Experiment, Material, Contaminant):
         ax.set(title='Sorption of %s on %s\n$k_1$ = %1.2e (1/hr), $k_2$ = %1.2e (1/hr), $K$ = %1.2e' % (self.get_contaminant().upper(), self.get_material(), k1, k2, K),
                xlabel='Time (min)', ylabel='Adsorbed mass (ng/g)')
 
-        plt.legend()
-        plt.show()
+        ax.legend()
 
         return
 
@@ -463,10 +462,17 @@ class Analysis:
         for file in ('no_soil_adsorption.csv', 'soil_adsorption.csv'):
             indoor = IndoorSource(path + file, material='none')
             df = indoor.get_dataframe()
-            df['soil_adsorption'] = np.repeat(file.rstrip('.csv'), len(df))
+            if 'no' in file:
+                fill = 0.0
+            else:
+                fill = 1.0
+            df['soil_sorption'] = np.repeat(fill, len(df))
             dfs.append(df)
 
-        return pd.concat(dfs, axis=0, sort=False).set_index(['soil_adsorption', 'time'])
+        return pd.concat(dfs, axis=0, sort=False).set_index(['soil_sorption', 'time'])
 
     def get_steady_state_data(self):
-        return df = COMSOL(file='../../data/steady_state.csv').get_data().set_index('K_ads')
+        data = COMSOL(file='../../data/parametric_sweep.csv').get_data().drop(columns='p_in (Pa).1')
+        data.rename(columns={'K_ads': 'soil_sorption'}, inplace=True)
+        data['soil_sorption'].replace({5.28: 1}, inplace=True)
+        return data.set_index(['soil_sorption', 'p_in'])
