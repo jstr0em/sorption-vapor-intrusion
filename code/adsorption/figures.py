@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from analysis import IndoorSource, Kinetics, Material, Analysis
-
+import matplotlib.ticker as mtick
 
 def indoor_adsorption():
     analysis = Analysis()
@@ -60,6 +60,18 @@ def soil_adsorption():
 
     ax.set(xlabel='Time (hr)',  ylabel='Attenuation from groundwater', title='Effect of soil sorption\nm_ads/m_soil = %1.2e' % t_ads['c_ads/c_soil'].mean())
 
+
+    # change in adsorbed mass
+    fig, ax = plt.subplots(dpi=300)
+
+
+    t_ads['m_ads_change'] = t_ads['m_ads'].values/t_ads['m_ads'].values[0]*100
+    t_ads.plot(y='m_ads_change', ax=ax)
+
+    ax.set(ylabel='%-change', xlabel='Time (hr)', title='Change in adsorbed mass')
+    #fmt = '%.2f%%' # Format you want the ticks, e.g. '40%'
+    #yticks = mtick.FormatStrFormatter(fmt)
+    #ax.yaxis.set_major_formatter(yticks)
     return
 
 
@@ -96,9 +108,9 @@ def transport_analysis():
 
     return
 
-Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
+#Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
 
 soil_adsorption()
-transport_analysis()
-indoor_adsorption()
+#transport_analysis()
+#indoor_adsorption()
 plt.show()
