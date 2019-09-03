@@ -74,7 +74,6 @@ def soil_adsorption():
     #ax.yaxis.set_major_formatter(yticks)
     return
 
-
 def transport_analysis():
     analysis = Analysis()
     ss = analysis.get_steady_state_data()
@@ -108,9 +107,32 @@ def transport_analysis():
 
     return
 
-#Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
+def indoor_adsorption_zero_entry():
+    analysis = Analysis()
+    df = analysis.get_indoor_zero_entry_material_data()
+    kin = analysis.get_kinetics_data()
 
-soil_adsorption()
+    # indoor material analysis
+    # combo plot
+    materials = list(df.index.levels[0])
+    fig, ax = plt.subplots(dpi=300)
+    for material in materials:
+        df_now = df.loc[material]
+        c_gw = df_now['c'].values[0]/df_now['alpha'].values[0]
+        df_now['alpha2'] = df_now['c']/c_gw
+        df_now.plot(y='alpha2',ax=ax, label=material.title(), logy=True, secondary_y='p')
+
+    #ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns,cellLoc = 'center', rowLoc = 'center', loc='bottom')
+
+    ax.legend()
+    ax.set(xlabel='Time (hr)', ylabel='Attenuation from groundwater', title='Attenuation factor from groundwater\nfollowing elimination of contaminant entry')
+    plt.tight_layout()
+    return
+
+
+#Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
+#soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
+indoor_adsorption_zero_entry()
 plt.show()

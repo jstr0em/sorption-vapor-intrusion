@@ -102,7 +102,7 @@ class COMSOL(Data):
         return df['j_ck'].values
 
     def get_entry_rate_data(self):
-        df = self.get_data
+        df = self.get_data()
         return df['n_ck'].values
 
     def get_concentration_data(self):
@@ -259,11 +259,13 @@ class Kinetics(Experiment, Material, Contaminant):
 
 
 class IndoorSource(COMSOL, Material, Contaminant):
-    def __init__(self, file, material='concrete', contaminant='TCE'):
+    def __init__(self, file, material='concrete', contaminant='TCE', zero_entry_rate=False):
         COMSOL.__init__(self, file)
         Contaminant.__init__(self, contaminant)
+        self.zero_entry_rate = zero_entry_rate
         self.set_building_param()
         self.set_entry_rate()
+
 
         if material is 'none':
             self.material = None
@@ -272,6 +274,9 @@ class IndoorSource(COMSOL, Material, Contaminant):
             self.set_material_volume()
         return
 
+
+    def get_zero_entry_rate(self):
+        return self.zero_entry_rate
     def get_air_exchange_rate(self):
         return self.Ae
 
@@ -296,14 +301,24 @@ class IndoorSource(COMSOL, Material, Contaminant):
         return
 
     def get_initial_concentration(self):
-        n = self.get_entry_rate()
+
         Ae = self.get_air_exchange_rate()
         V = self.get_building_volume()
-        return n(0) / (Ae * V)
+
+        if self.get_zero_entry_rate():
+            n = self.get_entry_rate_data()
+            return n[0]/(Ae*V)
+        else:
+            n = self.get_entry_rate()
+            return n(0) / (Ae * V)
 
     def set_entry_rate(self):
         # gets time and entry rate data
         t = self.get_time_data()
+
+        if self.get_zero_entry_rate():
+            self.n_ck = interp1d(t, np.repeat(0, len(t)), bounds_error=False, fill_value=0)
+            return
 
         try:
             n_ck = self.get_entry_rate_data() * 1e-6 / M
@@ -476,3 +491,28 @@ class Analysis:
         data.rename(columns={'K_ads': 'soil_sorption'}, inplace=True)
         data['soil_sorption'].replace({5.28: 1}, inplace=True)
         return data.set_index(['soil_sorption', 'p_in'])
+
+
+    def get_indoor_zero_entry_material_data(self):
+        materials = Material('concrete').get_materials()[0:-1]
+        materials.append('none')
+
+        dfs = []
+
+        for material in materials:
+            indoor = IndoorSource(
+                '../../data/no_soil_adsorption.csv', material=material, zero_entry_rate=True)
+            if material != 'none':
+                rxn = Kinetics(
+                    '../../data/adsorption_kinetics.csv', material=material)
+                k1, k2, K = rxn.get_reaction_constants()
+                indoor.set_reaction_constants(k1, k2, K)
+                df = indoor.get_dataframe()
+            else:
+                df = indoor.get_dataframe()
+            df.sort_values(by='time', inplace=True)
+            df.reset_index(inplace=True)
+            df['material'] = np.repeat(material, len(df))
+            dfs.append(df)
+
+        return pd.concat(dfs, axis=0, sort=False).set_index(['material', 'time'])
