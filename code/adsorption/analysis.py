@@ -84,8 +84,12 @@ class COMSOL(Data):
 
     def get_renaming_scheme(self):
         renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p_in', 'alpha (1)': 'alpha',
-                    'c_in (ug/m^3)': 'c_in', 'j_ck (ug/(m^2*s))': 'j_ck', 'm_ads (g)': 'm_ads', 'c_ads (mol/kg)': 'c_ads',
-                    'c_ads/c (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck', 'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_soil (ug/m^3)': 'c_soil', 'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads'}
+                    'c_in (ug/m^3)': 'c_in', 'j_ck (ug/(m^2*s))': 'j_ck', 'm_ads (g)': 'm_ads',
+                    'c_ads (mol/kg)': 'c_ads',
+                    'c_ads/c_gas (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck',
+                    'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_gas (ug/m^3)': 'c_gas',
+                    'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads',
+                    't (h)': 'time', 'c_ads_vol (ug/m^3)': 'c_ads_vol', 'c_liq (ug/m^3)': 'c_liq'}
         return renaming
 
     def process_raw_data(self):
@@ -265,7 +269,7 @@ class IndoorSource(COMSOL, Material, Contaminant):
         self.zero_entry_rate = zero_entry_rate
         self.set_building_param()
         self.set_entry_rate()
-
+        self.set_groundwater_concentration()
 
         if material is 'none':
             self.material = None
@@ -274,6 +278,12 @@ class IndoorSource(COMSOL, Material, Contaminant):
             self.set_material_volume()
         return
 
+    def get_groudwater_concentration(self):
+        return self.c_gw
+    def set_groundwater_concentration(self):
+        df = self.get_data()
+        self.c_gw = df['c_in'].values[0]/df['alpha'].values[0]
+        return
 
     def get_zero_entry_rate(self):
         return self.zero_entry_rate
@@ -304,14 +314,20 @@ class IndoorSource(COMSOL, Material, Contaminant):
 
         Ae = self.get_air_exchange_rate()
         V = self.get_building_volume()
+        M = self.get_molar_mass()
 
+        df = self.get_data()
+
+        return df['c_in'].values[0]/M/1e6
+        """
         if self.get_zero_entry_rate():
             n = self.get_entry_rate_data()
+            print('Using n')
             return n[0]/(Ae*V)
         else:
             n = self.get_entry_rate()
             return n(0) / (Ae * V)
-
+        """
     def set_entry_rate(self):
         # gets time and entry rate data
         t = self.get_time_data()
@@ -424,8 +440,10 @@ class IndoorSource(COMSOL, Material, Contaminant):
         df = self.get_data()
         t, c, c_star = self.solve_cstr()
         M = self.get_molar_mass()
-        df['c'] = c * M * 1e6
-        df['c_star'] = c_star * M * 1e6
+        c_gw = self.get_groudwater_concentration()
+        df['c_in'] = c * M * 1e6
+        df['c_mat'] = c_star * M * 1e6
+        df['alpha'] = df['c_in']/c_gw
         return df
 
 
@@ -446,15 +464,14 @@ class Analysis:
                             'k1': k1s, 'k2': k2s, 'K': Ks})
         return data
 
-    def get_indoor_material_data(self):
+    def generate_indoor_material_data(self, zero_entry_rate=False):
         materials = Material('concrete').get_materials()[0:-1]
         materials.append('none')
-
         dfs = []
 
         for material in materials:
             indoor = IndoorSource(
-                '../../data/no_soil_adsorption.csv', material=material)
+                '../../data/simulation/transient.csv', material=material, zero_entry_rate=zero_entry_rate)
             if material != 'none':
                 rxn = Kinetics(
                     '../../data/adsorption_kinetics.csv', material=material)
@@ -464,55 +481,41 @@ class Analysis:
             else:
                 df = indoor.get_dataframe()
             df.sort_values(by='time', inplace=True)
-            df.reset_index(inplace=True)
+            df.reset_index(inplace=True, drop=True)
             df['material'] = np.repeat(material, len(df))
             dfs.append(df)
 
-        return pd.concat(dfs, axis=0, sort=False).set_index(['material', 'time'])
+        df = pd.concat(dfs, axis=0, sort=False)
+        return df
 
-    def get_soil_data(self):
-        dfs = []
-        path = '../../data/'
+    def get_indoor_material_data(self,file='../../data/simulation/indoor_material.csv'):
+        #try:
+            #df = pd.read_csv(file)
+        #except:
+        df = self.generate_indoor_material_data()
+        df.to_csv(file,index=False)
+        return df.set_index(['material', 'time'])
 
-        for file in ('no_soil_adsorption.csv', 'soil_adsorption.csv'):
-            indoor = IndoorSource(path + file, material='none')
-            df = indoor.get_dataframe()
-            if 'no' in file:
-                fill = 0.0
-            else:
-                fill = 1.0
-            df['soil_sorption'] = np.repeat(fill, len(df))
-            dfs.append(df)
-
-        return pd.concat(dfs, axis=0, sort=False).set_index(['soil_sorption', 'time'])
+    def get_soil_sorption_data(self):
+        data = COMSOL('../../data/simulation/transient_parametric_sweep.csv')
+        df = data.get_data()
+        return df.set_index(['K_ads', 'time'])
 
     def get_steady_state_data(self):
-        data = COMSOL(file='../../data/parametric_sweep.csv').get_data().drop(columns='p_in (Pa).1')
-        data.rename(columns={'K_ads': 'soil_sorption'}, inplace=True)
-        data['soil_sorption'].replace({5.28: 1}, inplace=True)
-        return data.set_index(['soil_sorption', 'p_in'])
+        data = COMSOL(file='../../data/simulation/parametric_sweep.csv').get_data()
+        return data.set_index(['K_ads', 'p_in'])
 
 
-    def get_indoor_zero_entry_material_data(self):
-        materials = Material('concrete').get_materials()[0:-1]
-        materials.append('none')
+    def get_indoor_zero_entry_material_data(self,file='../../data/simulation/indoor_material_zero_entry_rate.csv'):
+        #try:
+            #df = pd.read_csv(file)
+        #except:
+        df = self.generate_indoor_material_data(zero_entry_rate=True)
+        df.to_csv(file,index=False)
+        return df.set_index(['material', 'time'])
 
-        dfs = []
 
-        for material in materials:
-            indoor = IndoorSource(
-                '../../data/no_soil_adsorption.csv', material=material, zero_entry_rate=True)
-            if material != 'none':
-                rxn = Kinetics(
-                    '../../data/adsorption_kinetics.csv', material=material)
-                k1, k2, K = rxn.get_reaction_constants()
-                indoor.set_reaction_constants(k1, k2, K)
-                df = indoor.get_dataframe()
-            else:
-                df = indoor.get_dataframe()
-            df.sort_values(by='time', inplace=True)
-            df.reset_index(inplace=True)
-            df['material'] = np.repeat(material, len(df))
-            dfs.append(df)
+x = Analysis()
 
-        return pd.concat(dfs, axis=0, sort=False).set_index(['material', 'time'])
+y = x.get_indoor_material_data()
+#print(y['c_in'])

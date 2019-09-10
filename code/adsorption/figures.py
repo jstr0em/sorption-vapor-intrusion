@@ -15,63 +15,21 @@ def indoor_adsorption():
     fig, ax = plt.subplots(dpi=300)
     for material in materials:
         df_now = df.loc[material]
-        c_gw = df_now['c'].values[0]/df_now['alpha'].values[0]
-        df_now['alpha2'] = df_now['c']/c_gw
-        df_now.plot(y='alpha2',ax=ax, label=material.title(), logy=True, secondary_y='p')
+        df_now.plot(y='c_in',ax=ax, label=material.title())
 
-    #ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns,cellLoc = 'center', rowLoc = 'center', loc='bottom')
-
-    ax.legend()
-    ax.set(xlabel='Time (hr)', ylabel='Attenuation from groundwater')
-    plt.tight_layout()
-
-    # separate plots
-    fig, (ax1, ax2, ax3) = plt.subplots(1,3,dpi=300)
-    for material in materials:
-        df_now = df.loc[material]
-        c_gw = df_now['c'].values[0]/df_now['alpha'].values[0]
-        df_now['alpha2'] = df_now['c']/c_gw
-        df_now.plot(y='alpha2',ax=ax1, label=material.title(), logy=False)
-        df_now.plot(y='alpha2',ax=ax2, legend=False, label=material.title(), logy=True)
-        df_now.plot(y='alpha2',ax=ax3, legend=False, label=material.title(), logy=True)
-
-    ax1.set(xlim=[0,25], ylabel='Attenuation from groundwater')
-    ax2.set(xlim=[25,48])
-    ax3.set(xlim=[48,72])
-    ax1.legend()
-    plt.tight_layout()
     return
 
 def soil_adsorption():
     analysis = Analysis()
     ss = analysis.get_steady_state_data()
-    t = analysis.get_soil_data()
-    cases = list(ss.index.levels[0])
+    df = analysis.get_soil_sorption_data()
+    cases = list(df.index.levels[0])
 
-    t_ads = t.loc[cases[1]]
-    t_ref = t.loc[cases[0]]
-    ss_ads = ss.loc[cases[1]]
-    ss_ref = ss.loc[cases[0]]
-
-
+    print(cases, df)
     fig, ax = plt.subplots(dpi=300)
-    t_ads.plot(y='alpha', ax=ax, logy=True, label='Soil sorption')
-    t_ref.plot(y='alpha', ax=ax, logy=True, label='No soil sorption')
-
-    ax.set(xlabel='Time (hr)',  ylabel='Attenuation from groundwater', title='Effect of soil sorption\nm_ads/m_soil = %1.2e' % t_ads['c_ads/c_soil'].mean())
-
-
-    # change in adsorbed mass
-    fig, ax = plt.subplots(dpi=300)
-
-
-    t_ads['m_ads_change'] = t_ads['m_ads'].values/t_ads['m_ads'].values[0]*100
-    t_ads.plot(y='m_ads_change', ax=ax)
-
-    ax.set(ylabel='%-change', xlabel='Time (hr)', title='Change in adsorbed mass')
-    #fmt = '%.2f%%' # Format you want the ticks, e.g. '40%'
-    #yticks = mtick.FormatStrFormatter(fmt)
-    #ax.yaxis.set_major_formatter(yticks)
+    for case in cases:
+        df_now = df.loc[case]
+        df_now.plot(y='c_in', label='K_ads = %1.2e' % case, ax=ax)
     return
 
 def transport_analysis():
@@ -131,8 +89,8 @@ def indoor_adsorption_zero_entry():
 
 
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
-#soil_adsorption()
+soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
-indoor_adsorption_zero_entry()
+#indoor_adsorption_zero_entry()
 plt.show()
