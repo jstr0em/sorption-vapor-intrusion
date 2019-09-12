@@ -513,9 +513,3 @@ class Analysis:
         df = self.generate_indoor_material_data(zero_entry_rate=True)
         df.to_csv(file,index=False)
         return df.set_index(['material', 'time'])
-
-
-x = Analysis()
-
-y = x.get_indoor_material_data()
-#print(y['c_in'])
