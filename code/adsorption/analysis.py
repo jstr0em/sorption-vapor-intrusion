@@ -86,7 +86,7 @@ class COMSOL(Data):
         renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p_in', 'alpha (1)': 'alpha',
                     'c_in (ug/m^3)': 'c_in', 'j_ck (ug/(m^2*s))': 'j_ck', 'm_ads (g)': 'm_ads',
                     'c_ads (mol/kg)': 'c_ads',
-                    'c_ads/c_gas (1)': 'c_ads/c_soil', 'alpha_ck (1)': 'alpha_ck',
+                    'c_ads/c_gas (1)': 'c_ads/c_gas', 'alpha_ck (1)': 'alpha_ck',
                     'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_gas (ug/m^3)': 'c_gas',
                     'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads',
                     't (h)': 'time', 'c_ads_vol (ug/m^3)': 'c_ads_vol', 'c_liq (ug/m^3)': 'c_liq',
