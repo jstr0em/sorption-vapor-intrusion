@@ -96,9 +96,31 @@ def indoor_adsorption_zero_entry():
     return
 
 
+def time_to_equilibrium():
+    analysis = Analysis()
+    df = analysis.get_time_to_equilibrium_data()
+    ss = analysis.get_steady_state_data()
+    ss = ss.loc[5.28]
+
+    fig, ax = plt.subplots(dpi=300)
+    cases = list(df.index.levels[0])
+    labels = {15: 'Overpressurization, -5 -> 15 Pa', -15: 'Depressurization, -5 -> -15 Pa'}
+    for case in cases:
+        df_now = df.loc[case]
+        p_in = df_now['p_in'].values[-1]
+
+        alpha0 = df_now['alpha'].values[0]
+        alpha_eq = ss.loc[p_in]['alpha']
+        df_now['alpha_from_eq'] = np.abs(df_now['alpha']-alpha0)/np.abs(alpha_eq-alpha0)
+        df_now.plot(y='alpha_from_eq', ax=ax, label=labels[p_in])
+        ax.set(ylabel='$\\frac{|\\alpha-\\alpha_0|}{|\\alpha_{eq}-\\alpha_0|}$',
+        xlabel='Time (hr)', title='Distance from new equilibrium state following indoor pressurization change')
+    return
+
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
 #soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
-indoor_adsorption_zero_entry()
+#indoor_adsorption_zero_entry()
+time_to_equilibrium()
 plt.show()
