@@ -127,6 +127,7 @@ venv.bak/
 *.mtc
 *.mtc1
 *.out
+*.spl
 *.synctex.gz
 *.fls
 *.fdb_latexmk
