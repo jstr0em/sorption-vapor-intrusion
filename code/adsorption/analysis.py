@@ -519,4 +519,4 @@ class Analysis:
     def get_time_to_equilibrium_data(self):
 
         data = COMSOL(file='../../data/simulation/time_to_equilibrium.csv').get_data()
-        return data.set_index(['p_cycle', 'time'])
+        return data.set_index(['K_ads','p_cycle', 'time'])
