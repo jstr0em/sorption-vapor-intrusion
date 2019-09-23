@@ -151,13 +151,14 @@ def time_to_equilibrium():
             ax2.set(ylabel='$\\frac{u_{ck}-u_{ck,0}|}{|u_{ck,eq}-u_{ck,0}|}$',
             xlabel='Time (hr)')
             ax3.set(ylabel='$\\frac{|c_{gas}-c_{gas,0}|}{|c_{gas,eq}-c_{gas,0}|}$', ylim=[0,1])
+            ax1.legend(loc='center right')
             plt.tight_layout()
     return
 
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
-soil_adsorption()
+#soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
 #indoor_adsorption_zero_entry()
-#time_to_equilibrium()
+time_to_equilibrium()
 plt.show()

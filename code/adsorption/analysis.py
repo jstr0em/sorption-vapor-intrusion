@@ -90,7 +90,8 @@ class COMSOL(Data):
                     'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_gas (ug/m^3)': 'c_gas',
                     'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads',
                     't (h)': 'time', 'c_ads_vol (ug/m^3)': 'c_ads_vol', 'c_liq (ug/m^3)': 'c_liq',
-                    '% Pressurization cycles index': 'p_cycle'}
+                    '% Pressurization cycles index': 'p_cycle',
+                    'Pressurization cycles index': 'p_cycle'}
         return renaming
 
     def process_raw_data(self):
