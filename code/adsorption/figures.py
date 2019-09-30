@@ -120,11 +120,21 @@ def time_to_equilibrium():
 
     isotherms = list(df.index.levels[0])
     cycles = list(df.index.levels[1])
-    labels = {15: 'Overpressurization, -5 -> 15 Pa', -15: 'Depressurization, -5 -> -15 Pa'}
+    labels = {15: '-5 -> 15 Pa', -15: '-5 -> -15 Pa'}
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-    for isotherm in isotherms:
+    handles = []
+    labels = []
+
+    for i, isotherm in enumerate(isotherms):
+        color = colors[i]
+        handles.append(plt.Line2D((0,1),(0,0), color=color,linestyle='-'))
+        labels.append('K_ads = %1.2e' % isotherm)
+
         for cycle in cycles:
+
             df_now = df.loc[(isotherm, cycle)]
+            print(isotherm, df_now['c_ads/c_gas'][0])
             p_in = df_now['p_in'].values[-1]
 
             alpha0 = df_now['alpha'].values[0]
@@ -139,26 +149,37 @@ def time_to_equilibrium():
             df_now['alpha_from_eq'] = np.abs(df_now['alpha']-alpha0)/np.abs(alpha_eq-alpha0)
             df_now['u_ck_from_eq'] = np.abs(df_now['u_ck']-u0)/np.abs(u_eq-u0)
             df_now['c_gas_from_eq'] = np.abs(df_now['c_gas']-c0)/np.abs(c_eq-c0)
-
             # plotting
-            df_now.plot(y='alpha_from_eq', ax=ax1, label=labels[p_in])
-            #df_now.plot(y='p_in', ax=ax2, legend=False,linestyle='--')
-            df_now.plot(y='u_ck_from_eq', ax=ax2, legend=False)
-            df_now.plot(y='c_gas_from_eq', ax=ax3, legend=False, linestyle='--', logy=True)
+            if p_in == -15:
+                df_now.plot(y='alpha_from_eq', style='-', ax=ax1, legend=False, color=color)
+            elif p_in == 15:
+                df_now.plot(y='alpha_from_eq', style='--', ax=ax1, legend=False, color=color)
 
-            # formatting
-            ax1.set(ylabel='$\\frac{|\\alpha-\\alpha_0|}{|\\alpha_{eq}-\\alpha_0|}$', title='Distance from new equilibrium state following\nindoor pressurization change')
-            ax2.set(ylabel='$\\frac{u_{ck}-u_{ck,0}|}{|u_{ck,eq}-u_{ck,0}|}$',
-            xlabel='Time (hr)')
-            ax3.set(ylabel='$\\frac{|c_{gas}-c_{gas,0}|}{|c_{gas,eq}-c_{gas,0}|}$', ylim=[0,1])
-            ax1.legend(loc='center right')
-            plt.tight_layout()
+            #df_now.plot(y='p_in', ax=ax2, legend=False,linestyle='--')
+            df_now.plot(y='u_ck_from_eq', ax=ax2, color=color, legend=False)
+            df_now.plot(y='c_gas_from_eq', ax=ax3, color=color, legend=False, linestyle='--', logy=True)
+
+    # formatting
+    ax1.set(ylabel='$\\frac{|\\alpha-\\alpha_0|}{|\\alpha_{eq}-\\alpha_0|}$', title='Distance from new equilibrium state following\nindoor pressurization change')
+    ax2.set(ylabel='$\\frac{u_{ck}-u_{ck,0}|}{|u_{ck,eq}-u_{ck,0}|}$',
+    xlabel='Time (hr)')
+    ax3.set(ylabel='$\\frac{|c_{gas}-c_{gas,0}|}{|c_{gas,eq}-c_{gas,0}|}$', ylim=[0,1])
+
+
+    # custom legend
+    handles.append(plt.Line2D((0,1),(0,0), color='k',linestyle='-'))
+    handles.append(plt.Line2D((0,1),(0,0), color='k',linestyle='--'))
+    labels.append('-5 -> -15 Pa')
+    labels.append('-5 -> 15 Pa')
+    ax1.legend(handles=handles, labels=labels,loc='center right')
+
+    plt.tight_layout()
     return
 
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
-#soil_adsorption()
+soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
 #indoor_adsorption_zero_entry()
-time_to_equilibrium()
+#time_to_equilibrium()
 plt.show()
