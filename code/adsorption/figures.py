@@ -110,16 +110,36 @@ def indoor_adsorption_zero_entry():
 
 
 def time_to_equilibrium():
+    def equilibrium_distance(df_t, df_ss):
+        # end pressure
+        p_in = df_t['p_in'].values[-1]
+        df_ss = df_ss.loc[p_in]
+
+        alpha0 = df_t['alpha'].values[0]
+        alpha_eq = df_ss['alpha']
+
+        u0 = df_t['u_ck'].values[0]
+        u_eq = df_ss['u_ck']
+
+        c0 = df_t['c_gas'].values[0]
+        c_eq = df_ss['c_gas']
+
+        df_t['alpha_from_eq'] = np.abs(df_t['alpha']-alpha0)/np.abs(alpha_eq-alpha0)
+        df_t['u_ck_from_eq'] = np.abs(df_t['u_ck']-u0)/np.abs(u_eq-u0)
+        df_t['c_gas_from_eq'] = np.abs(df_t['c_gas']-c0)/np.abs(c_eq-c0)
+        return df_t
+
     analysis = Analysis()
     df = analysis.get_time_to_equilibrium_data()
     ss = analysis.get_steady_state_data()
-    ss = ss.loc[5.28]
+    #ss = ss.loc[5.28]
 
     fig, (ax1, ax2) = plt.subplots(2,1,sharex=True,dpi=300)
     ax3 = ax2.twinx()
 
-    isotherms = list(df.index.levels[0])
-    cycles = list(df.index.levels[1])
+    soils = list(df.index.levels[0])
+    isotherms = list(df.index.levels[1])
+    cycles = list(df.index.levels[2])
     labels = {15: '-5 -> 15 Pa', -15: '-5 -> -15 Pa'}
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
@@ -127,29 +147,18 @@ def time_to_equilibrium():
     labels = []
 
     for i, isotherm in enumerate(isotherms):
+        ss_now = ss.loc[('Sandy Loam', 5.28)] # keep
         color = colors[i]
         handles.append(plt.Line2D((0,1),(0,0), color=color,linestyle='-'))
         labels.append('K_ads = %1.2e' % isotherm)
 
         for cycle in cycles:
 
-            df_now = df.loc[(isotherm, cycle)]
-            print(isotherm, df_now['c_ads/c_gas'][0])
-            p_in = df_now['p_in'].values[-1]
+            df_now = df.loc[('Sandy Loam',isotherm, cycle)] # keep
 
-            alpha0 = df_now['alpha'].values[0]
-            alpha_eq = ss.loc[p_in]['alpha']
-
-            u0 = df_now['u_ck'].values[0]
-            u_eq = ss.loc[p_in]['u_ck']
-
-            c0 = df_now['c_gas'].values[0]
-            c_eq = ss.loc[p_in]['c_gas']
-
-            df_now['alpha_from_eq'] = np.abs(df_now['alpha']-alpha0)/np.abs(alpha_eq-alpha0)
-            df_now['u_ck_from_eq'] = np.abs(df_now['u_ck']-u0)/np.abs(u_eq-u0)
-            df_now['c_gas_from_eq'] = np.abs(df_now['c_gas']-c0)/np.abs(c_eq-c0)
+            df_now = equilibrium_distance(df_now, ss_now)
             # plotting
+            p_in = df_now['p_in'].values[-1]
             if p_in == -15:
                 df_now.plot(y='alpha_from_eq', style='-', ax=ax1, legend=False, color=color)
             elif p_in == 15:
@@ -173,11 +182,48 @@ def time_to_equilibrium():
     labels.append('-5 -> 15 Pa')
     ax1.legend(handles=handles, labels=labels,loc='center right')
 
+
+
+    # sand analysis
+    fig, (ax1, ax2, ax3) = plt.subplots(3,1, dpi=300, sharex=True)
+    handles = []
+    labels = []
+
+
+    for i, soil in enumerate(soils):
+        color = colors[i]
+        handles.append(plt.Line2D((0,1),(0,0), color=color,linestyle='-'))
+        labels.append(soil)
+        for cycle in cycles:
+            df_now = df.loc[(soil, 0, cycle)]
+            ss_now = ss.loc[(soil, 0)]
+            df_now = equilibrium_distance(df_now, ss_now)
+            # plotting
+            p_in = df_now['p_in'].values[-1]
+            if p_in == -15:
+                linestyle='-'
+            elif p_in == 15:
+                linestyle='--'
+
+            df_now.plot(y='alpha_from_eq', linestyle=linestyle, ax=ax1, legend=False, color=color)
+            df_now.plot(y='u_ck_from_eq', ax=ax2, linestyle=linestyle, color=color, legend=False)
+            df_now.plot(y='c_gas_from_eq', ax=ax3, color=color, legend=False, linestyle=linestyle)
+
+            #df_now.plot(y='p_in', ax=ax2, legend=False,linestyle='--')
+            #df_now.plot(y='u_ck_from_eq', ax=ax2, color=color, legend=False)
+            #df_now.plot(y='c_gas_from_eq', ax=ax3, color=color, legend=False, linestyle='--', logy=True)
+
+    handles.append(plt.Line2D((0,1),(0,0), color='k',linestyle='-'))
+    handles.append(plt.Line2D((0,1),(0,0), color='k',linestyle='--'))
+    labels.append('-5 -> -15 Pa')
+    labels.append('-5 -> 15 Pa')
+    ax1.legend(handles=handles, labels=labels,loc='center right')
+
     plt.tight_layout()
     return
 
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
-soil_adsorption()
+#soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
 #indoor_adsorption_zero_entry()
