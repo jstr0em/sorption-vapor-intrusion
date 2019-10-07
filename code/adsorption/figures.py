@@ -189,7 +189,7 @@ def time_to_equilibrium():
     handles = []
     labels = []
 
-
+    soils = ('Sand',)
     for i, soil in enumerate(soils):
         color = colors[i]
         handles.append(plt.Line2D((0,1),(0,0), color=color,linestyle='-'))
@@ -218,6 +218,12 @@ def time_to_equilibrium():
     labels.append('-5 -> -15 Pa')
     labels.append('-5 -> 15 Pa')
     ax1.legend(handles=handles, labels=labels,loc='center right')
+
+    # formatting
+    ax1.set(ylabel='$\\frac{|\\alpha-\\alpha_0|}{|\\alpha_{eq}-\\alpha_0|}$', title='Distance from new equilibrium state following\nindoor pressurization change')
+    ax2.set(ylabel='$\\frac{u_{ck}-u_{ck,0}|}{|u_{ck,eq}-u_{ck,0}|}$',
+    xlabel='Time (hr)')
+    ax3.set(ylabel='$\\frac{|c_{gas}-c_{gas,0}|}{|c_{gas,eq}-c_{gas,0}|}$')
 
     plt.tight_layout()
     return
