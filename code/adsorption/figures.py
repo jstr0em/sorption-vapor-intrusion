@@ -3,19 +3,48 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from analysis import IndoorSource, Kinetics, Material, Analysis
 import matplotlib.ticker as mtick
+from matplotlib.gridspec import GridSpec
 
 def indoor_adsorption():
+    plt.style.use('seaborn')
+    # loading all the data
     analysis = Analysis()
     df = analysis.get_indoor_material_data()
     kin = analysis.get_kinetics_data()
 
-    # indoor material analysis
-    # combo plot
-    materials = list(df.index.levels[0])
-    fig, ax = plt.subplots(dpi=300)
+    materials = list(kin.sort_values(by='K',ascending=False).index)
+    materials.insert(0, 'none')
+    materials.remove('soil')
+
+    # setting up figure
+    fig = plt.figure(dpi=300, constrained_layout=True)
+    gs = GridSpec(2,2, figure=fig)
+
+    ax1 = fig.add_subplot(gs[0,0])
+    ax2 = fig.add_subplot(gs[0,1])
+    ax3 = fig.add_subplot(gs[1,:])
+
+
+    # pressure plot
+    df.loc[materials[0]].plot(y='p_in', ax=ax1, color='k', legend=False)
+
     for material in materials:
         df_now = df.loc[material]
-        df_now.plot(y='c_in',ax=ax, label=material.title())
+        df_now.plot(y='rxn', ax=ax2, legend=False)
+        df_now.plot(y='c_in',ax=ax3, label=material.title(), legend=False)
+
+    xlabel = 'Time (h)'
+
+    ax1.set(title='Building pressurization cycle', ylabel='$\\Delta p \\; \\mathrm{(Pa)}$', xlabel=xlabel)
+    ax2.set(title='Sorption rate', ylabel='$r_{sorb} \\; \\mathrm{(\\mu g/h)}$', xlabel=xlabel)
+    ax3.set(title='Indoor air contaminant concentration', ylabel='$c_{in} \\; \\mathrm{(\\mu g/m^3)}$', xlabel=xlabel)
+
+
+    handles, labels = ax3.get_legend_handles_labels()
+
+    # TODO: See if you can place the figure legend where it currently is without this hack...
+    ax3.legend([],[],loc='center left',bbox_to_anchor=(1.15,1))
+    fig.legend(handles, labels,loc='center left', title='Material', bbox_to_anchor=(0.85,0.5))
 
     return
 
@@ -231,7 +260,7 @@ def time_to_equilibrium():
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
 #soil_adsorption()
 #transport_analysis()
-#indoor_adsorption()
+indoor_adsorption()
 #indoor_adsorption_zero_entry()
-time_to_equilibrium()
+#time_to_equilibrium()
 plt.show()

@@ -430,23 +430,25 @@ class IndoorSource(COMSOL, Material, Contaminant):
                 t[0], t[-1]), y0=[c0_in], method='Radau', t_eval=t, max_step=0.1)
             t, c, c_star = r['t'], r['y'][0], np.repeat(0, len(r['y'][0]))
 
-            return t, c, c_star
+            return t, c, c_star, np.repeat(0, len(t))
         else:
             k1, k2, K = self.get_reaction_constants()
             c0 = [c0_in, c0_in / K]
             r = solve_ivp(self.cstr, t_span=(t[0], t[-1]), y0=c0, method='Radau',
                           t_eval=t, max_step=0.1)
             t, c, c_star = r['t'], r['y'][0], r['y'][1]
-            return t, c, c_star
+            rxn = self.reaction(c, c_star, k1, k2)
+            return t, c, c_star, rxn
 
     def get_dataframe(self):
         df = self.get_data()
-        t, c, c_star = self.solve_cstr()
+        t, c, c_star, rxn = self.solve_cstr()
         M = self.get_molar_mass()
         c_gw = self.get_groudwater_concentration()
-        df['c_in'] = c * M * 1e6
-        df['c_mat'] = c_star * M * 1e6
+        df['c_in'] = c * M * 1e6 # ug/m^3
+        df['c_mat'] = c_star * M * 1e6 # ug/m^3
         df['alpha'] = df['c_in']/c_gw
+        df['rxn'] = rxn * M * 1e6 # ug/hr
         return df
 
 
@@ -532,8 +534,3 @@ class Analysis:
 
         df = pd.concat([data, sand_data], axis=0)
         return df.set_index(['soil','K_ads','p_cycle', 'time'])
-
-
-x = Analysis()
-
-print(x.get_steady_state_data())
