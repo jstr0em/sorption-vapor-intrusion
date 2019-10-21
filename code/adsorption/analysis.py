@@ -130,7 +130,7 @@ class Experiment(Data):
 
 
 class Kinetics(Experiment, Material, Contaminant):
-    def __init__(self, file, material='concrete', contaminant='TCE', T=298, P=101325):
+    def __init__(self, file='../../data/adsorption_kinetics.csv', material='concrete', contaminant='TCE', T=298, P=101325):
         Experiment.__init__(self, file)
         Material.__init__(self, material)
         Contaminant.__init__(self, contaminant)
@@ -239,6 +239,7 @@ class Kinetics(Experiment, Material, Contaminant):
         rho = self.get_material_density()
         rho *= 1e-3  # converts to kg/m^3
         return 1 / (K * rho)
+
 
     def plot(self, save=False):
 

@@ -4,9 +4,8 @@ import pandas as pd
 from analysis import IndoorSource, Kinetics, Material, Analysis
 import matplotlib.ticker as mtick
 from matplotlib.gridspec import GridSpec
-
+plt.style.use('seaborn')
 def indoor_adsorption():
-    plt.style.use('seaborn')
     # loading all the data
     analysis = Analysis()
     df = analysis.get_indoor_material_data()
@@ -45,6 +44,60 @@ def indoor_adsorption():
     # TODO: See if you can place the figure legend where it currently is without this hack...
     ax3.legend([],[],loc='center left',bbox_to_anchor=(1.15,1))
     fig.legend(handles, labels,loc='center left', title='Material', bbox_to_anchor=(0.85,0.5))
+
+    return
+
+def sorption_fit():
+    """
+    Figure showing some of Shuai's data points and my kinetic model fit to them
+    """
+
+    materials = ['wood', 'concrete']
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+    handles = []
+    labels = []
+    fig, ax = plt.subplots(dpi=300)
+
+    # loops over the two chosen materials and plots their sorption data with
+    # fitted curves
+    for i, material in enumerate(materials):
+        color = colors[i] # current color
+
+        # creates instance
+        kin = Kinetics(material=material)
+        # gets data kinetic and contaminant data
+        k1, k2, K = kin.get_reaction_constants()
+        M = kin.get_molar_mass()
+        rho = kin.get_material_density()
+
+        t_data = kin.get_time_data()
+        c_star_data = kin.get_adsorbed_conc()
+
+        t = np.linspace(t_data[0], t_data[-1], 200)
+        c_star = kin.solve_reaction(t, k1, k2)
+
+        ax.semilogy(t_data * 60, c_star_data / rho * M * 1e9, 'o', color=color)
+        ax.semilogy(t * 60, c_star / rho * M * 1e9, color=color)
+
+        # legend entry
+        handles.append(plt.Line2D((0,1),(0,1),color=color,linestyle='-'))
+        #labels.append('%s, $k_1$ = %1.1e, $k_2$ = %1.1e, K = %1.1e' % (material.title(), k1, k2, K))
+        labels.append('%s' % material.title())
+
+    # custom handles and labels
+    handles.append(plt.Line2D((0,1),(0,1),color='k'))
+    handles.append(plt.Line2D((0,1),(0,1),marker='o',linestyle='None',color='k'))
+    labels.append('Fitted curve')
+    labels.append('Experimental data')
+
+    ax.legend(handles, labels, title='Material')
+
+    ax.set(
+        title='Sorption of 1.12 $\\mathrm{ppb_v}$ of %s on %s and %s with fitted curves' % (kin.get_contaminant().upper(), materials[0], materials[1]),
+        xlabel='Time (min)',
+        ylabel='Adsorbed mass (ng/g)'
+        )
 
     return
 
@@ -260,7 +313,8 @@ def time_to_equilibrium():
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
 #soil_adsorption()
 #transport_analysis()
-indoor_adsorption()
+#indoor_adsorption()
 #indoor_adsorption_zero_entry()
 #time_to_equilibrium()
+sorption_fit()
 plt.show()
