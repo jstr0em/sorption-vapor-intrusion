@@ -391,7 +391,7 @@ class BuildingSides:
 
 class TempPressure:
     def __init__(self):
-        data = pd.read_csv('./data/indianapolis.csv')
+        data = pd.read_csv('../data/indianapolis.csv')
         data['Time'] = data['Time'].apply(pd.to_datetime)
         data['TempDiff'] = data['IndoorTemp']-data['OutdoorTemp']
 
@@ -441,5 +441,5 @@ class TempPressure:
 #TempCorrelation()
 #TimePlot()
 #SoilTemp()
-BuildingSides()
-#TempPressure()
+#BuildingSides()
+TempPressure()
