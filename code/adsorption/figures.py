@@ -175,18 +175,36 @@ def indoor_adsorption_zero_entry():
     df = analysis.get_indoor_zero_entry_material_data()
     kin = analysis.get_kinetics_data()
 
+
+
+
+    materials = list(kin.sort_values(by='K',ascending=False).index)
+    materials.insert(0, 'none')
+    materials.remove('soil')
+
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
     # indoor material analysis
     # combo plot
-    materials = list(df.index.levels[0])
-    fig, ax = plt.subplots(dpi=300)
-    for material in materials:
+    #materials = list(df.index.levels[0])
+    fig, (ax1, ax2) = plt.subplots(2,1,sharex=True,dpi=300)
+    for i, material in enumerate(materials):
+
+        color = colors[i]
         df_now = df.loc[material]
-        df_now.plot(y='alpha',ax=ax, label=material.title(), logy=True, secondary_y='p')
+        df_now.plot(y='alpha',ax=ax1, label=material.title(), logy=True, color=color)
+
+        if material != 'none':
+            print(material, df_now['c_mat'].max()/df_now['c_in'].max())
+            df_now['ConcentrationDifference'] = df_now['alpha']/df.loc['none']['alpha']
+            df_now.plot(y='ConcentrationDifference', ax=ax2, label=material.title(), logy=True, color=color, legend=False)
 
     #ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns,cellLoc = 'center', rowLoc = 'center', loc='bottom')
 
-    ax.legend()
-    ax.set(xlabel='Time (hr)', ylabel='Attenuation from groundwater', title='Attenuation factor from groundwater\nfollowing elimination of contaminant entry')
+    ax1.legend(title='Material')
+    ax1.set(ylabel='$\\alpha$', title='Attenuation factor from groundwater following elimination of contaminant entry')
+    ax2.set(xlabel='Time (hr)', ylabel='$\\alpha/\\alpha_{ref}$', title='Elevated indoor concentration due to indoor material sorption')
+
     plt.tight_layout()
     return
 
@@ -314,7 +332,7 @@ def time_to_equilibrium():
 #soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
-#indoor_adsorption_zero_entry()
+indoor_adsorption_zero_entry()
 #time_to_equilibrium()
-sorption_fit()
+#sorption_fit()
 plt.show()

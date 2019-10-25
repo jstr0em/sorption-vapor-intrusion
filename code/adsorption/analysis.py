@@ -323,15 +323,7 @@ class IndoorSource(COMSOL, Material, Contaminant):
         df = self.get_data()
 
         return df['c_in'].values[0]/M/1e6
-        """
-        if self.get_zero_entry_rate():
-            n = self.get_entry_rate_data()
-            print('Using n')
-            return n[0]/(Ae*V)
-        else:
-            n = self.get_entry_rate()
-            return n(0) / (Ae * V)
-        """
+
     def set_entry_rate(self):
         # gets time and entry rate data
         t = self.get_time_data()
