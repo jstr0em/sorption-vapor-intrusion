@@ -209,7 +209,7 @@ def indoor_adsorption_zero_entry():
     return
 
 
-def time_to_equilibrium():
+def time_to_equilibrium_old():
     def equilibrium_distance(df_t, df_ss):
         # end pressure
         p_in = df_t['p_in'].values[-1]
@@ -328,11 +328,68 @@ def time_to_equilibrium():
     plt.tight_layout()
     return
 
+def time_to_equilibrium():
+    analysis = Analysis()
+    df = analysis.get_time_to_equilibrium_data()
+    ss = analysis.get_steady_state_data()
+
+    soils = df.index.levels[0]
+    Ks = df.index.levels[1]
+    cycles = df.index.levels[2]
+
+    vars = ['alpha', 'u_ck', 'c_gas']
+
+    for cycle in cycles:
+        # setting up figure
+        fig = plt.figure(dpi=300, constrained_layout=True)
+        gs = GridSpec(2,2, figure=fig)
+
+        ax1 = fig.add_subplot(gs[0,:])
+        ax2 = fig.add_subplot(gs[1,0])
+        ax3 = fig.add_subplot(gs[1,1])
+        axes = (ax1, ax2, ax3)
+        #soils = [soils[-1],] # temporary thing
+        for soil in soils:
+            for K in Ks:
+                try:
+                    df_now = df.loc[(soil, K, cycle)]
+                    p_end = df_now['p_in'].values[-1]
+                    ss_now = ss.loc[(soil, 5.28, p_end)]
+
+                    for ax, var in zip(axes, vars):
+                        var_0 = df_now[var].values[0] # intial value
+                        var_eq = ss_now[var] # equilibrium values
+                        df_now[var+'_distance'] = (df_now[var]-var_0)/(var_eq-var_0)
+                        df_now.plot(y=var+'_distance', ax=ax, legend=False, label='%s, K = %1.2e' % (soil, K))
+                        ax.set(xlabel='Time (hr)')
+                except:
+                    continue
+        ax1.legend(loc='lower right', title='Soil & sorptivity', frameon=True)
+        ax1.set(
+            ylim=[0,1],
+            title='Distance from new indoor air concentration equilibrium',
+            ylabel='$\\frac{\\alpha - \\alpha_0}{\\alpha_{eq} - \\alpha_0}$',
+        )
+        ax2.set(
+            ylim=[0,1],
+            title='... flow velocity through crack equilibrium',
+            ylabel='$\\frac{u - u_0}{u_{eq} - u_0}$',
+        )
+        ax3.set(
+            ylim=[1e-6, 1],
+            title='... soil-gas equilibrium near crack',
+            ylabel='$\\frac{c - c_0}{c_{eq} - c_0}$',
+        )
+        ax3.set(yscale='log')
+
+
+    return
+
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
 #soil_adsorption()
 #transport_analysis()
 #indoor_adsorption()
-indoor_adsorption_zero_entry()
-#time_to_equilibrium()
+#indoor_adsorption_zero_entry()
+time_to_equilibrium()
 #sorption_fit()
 plt.show()

@@ -79,8 +79,7 @@ class COMSOL(Data):
         return self.A_ck
 
     def get_raw_data(self):
-        path = self.get_path()
-        return pd.read_csv(path, header=4)
+        return pd.read_csv(self.get_path(), header=4)
 
     def get_renaming_scheme(self):
         renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p_in', 'alpha (1)': 'alpha',
@@ -91,11 +90,18 @@ class COMSOL(Data):
                     'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads','K_ads (m^3/kg)': 'K_ads',
                     't (h)': 'time', 'c_ads_vol (ug/m^3)': 'c_ads_vol', 'c_liq (ug/m^3)': 'c_liq',
                     '% Pressurization cycles index': 'p_cycle',
-                    'Pressurization cycles index': 'p_cycle', 'Q_ck (L/h)': 'Q_ck'}
+                    'Pressurization cycles index': 'p_cycle', 'Q_ck (L/h)': 'Q_ck',
+                    '% matsw.comp1.sw1': 'soil',
+                    }
         return renaming
 
     def process_raw_data(self):
         raw_df = self.get_raw_data()
+        # removes the druplicate columns from read_csv
+        for col in list(raw_df):
+            if '.1' in col:
+                raw_df.drop(columns=col, inplace=True)
+
         self.data = raw_df.rename(columns=self.get_renaming_scheme())
 
         return
@@ -501,12 +507,9 @@ class Analysis:
 
     def get_steady_state_data(self):
         data = COMSOL(file='../../data/simulation/parametric_sweep.csv').get_data()
-        sand_data = COMSOL(file='../../data/simulation/sand_parametric_sweep.csv').get_data()
+        data['soil'].replace([1,2], ['Sandy Loam', 'Sand'], inplace=True)
 
-        data['soil'] = np.repeat('Sandy Loam', len(data))
-        sand_data['soil'] = np.repeat('Sand', len(sand_data))
-        df = pd.concat([data, sand_data], axis=0)
-        return df.set_index(['soil','K_ads', 'p_in'])
+        return data.set_index(['soil','K_ads', 'p_in'])
 
 
     def get_indoor_zero_entry_material_data(self,file='../../data/simulation/indoor_material_zero_entry_rate.csv'):
@@ -525,5 +528,7 @@ class Analysis:
         sand_data = COMSOL(file='../../data/simulation/sand_time_to_equilibrium.csv').get_data()
         sand_data['soil'] = np.repeat('Sand', len(sand_data))
 
-        df = pd.concat([data, sand_data], axis=0)
+        df = pd.concat([data, sand_data], axis=0, sort=False)
+
+        df['p_cycle'].replace([2, 3], ['Depressurization', 'Overpressurization'], inplace=True)
         return df.set_index(['soil','K_ads','p_cycle', 'time'])
