@@ -91,7 +91,7 @@ class COMSOL(Data):
                     't (h)': 'time', 'c_ads_vol (ug/m^3)': 'c_ads_vol', 'c_liq (ug/m^3)': 'c_liq',
                     '% Pressurization cycles index': 'p_cycle',
                     'Pressurization cycles index': 'p_cycle', 'Q_ck (L/h)': 'Q_ck',
-                    '% matsw.comp1.sw1': 'soil',
+                    '% matsw.comp1.sw1': 'soil', '% Switch 1 index': 'soil',
                     }
         return renaming
 
@@ -475,7 +475,7 @@ class Analysis:
 
         for material in materials:
             indoor = IndoorSource(
-                '../../data/simulation/transient.csv', material=material, zero_entry_rate=zero_entry_rate)
+                '../../data/simulation/CPM_cycle_final.csv', material=material, zero_entry_rate=zero_entry_rate)
             if material != 'none':
                 rxn = Kinetics(
                     '../../data/adsorption_kinetics.csv', material=material)
@@ -506,7 +506,7 @@ class Analysis:
         return df.set_index(['K_ads', 'time'])
 
     def get_steady_state_data(self):
-        data = COMSOL(file='../../data/simulation/parametric_sweep.csv').get_data()
+        data = COMSOL(file='../../data/simulation/parametric_sweep_final.csv').get_data()
         data['soil'].replace([1,2], ['Sandy Loam', 'Sand'], inplace=True)
 
         return data.set_index(['soil','K_ads', 'p_in'])
@@ -523,9 +523,9 @@ class Analysis:
 
     def get_time_to_equilibrium_data(self):
 
-        data = COMSOL(file='../../data/simulation/time_to_equilibrium.csv').get_data()
+        data = COMSOL(file='../../data/simulation/time_to_equilibrium_final.csv').get_data()
         data['soil'] = np.repeat('Sandy Loam', len(data))
-        sand_data = COMSOL(file='../../data/simulation/sand_time_to_equilibrium.csv').get_data()
+        sand_data = COMSOL(file='../../data/simulation/sand_time_to_equilibrium_final.csv').get_data()
         sand_data['soil'] = np.repeat('Sand', len(sand_data))
 
         df = pd.concat([data, sand_data], axis=0, sort=False)
