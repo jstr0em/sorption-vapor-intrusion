@@ -1,6 +1,5 @@
 \section{Methods}\label{sec:methods}
 
-
 \subsection{Experimental Setup}\label{sec:experiment}
 
 The TCE  dynamic sorption process of different building materials were determined by use of a method schematically shown in Figure \ref{fig:js_sx_setup}.
@@ -13,15 +12,17 @@ The typical flow rate of the nitrogen was 60 ml/min and the concentrations of TC
 All of these adsorption experiments were conducted at room temperature.
 After a given time of exposure to the TCE-containing flow, that flow was stopped, and the sample tube was attached to a sorbent tube placed downstream of the sample tube.
 The sample tube was arranged such that the direction of the nitrogen flow in the subsequent desorption process was opposite that of the TCE-containing nitrogen flow during the adsorption process.
-During the thermal desorption step, the sample containing tube was covered by a heating mantle which permitted its heating at 100 C. % TODO: Add degree symbols
+During the thermal desorption step, the sample containing tube was covered by a heating mantle which permitted its heating at 100 \degree C.
 This allowed fully desorbing the TCE which had been held on the sample into a pure nitrogen flow, which carried it to the room temperature downstream sorbent tube, where it was again fully adsorbed.
 These tubes fully capture all of the TCE desorbed, from the samples, and the amount of TCE was analyzed by Gas Chromatography (GC) with an  Electron Capture Detector(ECD).
 
 \begin{figure}
   \includegraphics[width=\textwidth]{JS_SX_experiment_setup.png}
-  \caption{Schematic of experimental setup.} % TODO: Shuai: Writer better description
+  \caption{Schematic of experimental setup.} % TODO: Shuai: Write better description
   \label{fig:js_sx_setup}
 \end{figure}
+
+% TODO: Add a mention/reference to how the experimental data is then used to get kinetic data further down.
 
 \subsection{Numerical Model}\label{sec:model}
 
@@ -41,6 +42,13 @@ The governing equations and the physics they govern are:
 \end{enumerate}
 These physics are implemented in COMSOL Multiphysics, a commercial finite-element method package, which is used to solve our model.
 It is important to note that the indoor environment is implicitly modeled, but instead only given by the CSTR equation; the soil domain is explicitly modeled.\par
+
+% TODO: Make some nice figure
+\begin{figure}
+  %\includegraphics{}
+  \caption{The vapor intrusion model}
+  \label{fig:model}
+\end{figure}
 
 \subsubsection{Vadose Zone Moisture Content}
 
@@ -70,37 +78,76 @@ In turn this gives the water and gas filled porosities, and the relative permeab
     \end{cases}
 \end{align}
 $\mathrm{Se}$ is the saturation, and ranges from 0 to 1, which represent completely un- to fully saturated;
-$z$ is the elevation above the groundwater in meter;
+$z$ is the elevation above the groundwater in meters;
 $\theta_r$, $\theta_s$, $\theta_w$, and $\theta_g$ are the residual moisture content, saturated porosity (or just porosity), and water and air filled porosities respectively. All units are in volume of phase divided by the volume of soil;
 $k_r$ is the relative permeability of water, which modifies the saturated permeability. This too ranges from 0 to 1, indicating completely im- and permeable respectively. $1-k_r$ gives the relative permeability of air.\par
 
-\subsubsection{Gas Flow In The Vadose Zone}
+\subsubsection{Gas Flow In The Vadose Zone}\label{sec:darcy}
 
 The gas flow in the vadose zone is governed by a modified version of Darcy's Law.
-Originally, Darcy's Law was developed to describe flow in saturated porous media, but since we're interested in flow in unsaturated media - modification is necessary.
+Originally, Darcy's Law was developed to describe flow in saturated porous media, but since we're interested in flow in unsaturated media, modification is necessary.
 An effective permeability that depends on the relative permeability from van Genuchten is introduced to allow for correct flow profiles in unsaturated porous media.\par
 
 The vapor flow governing equation is given by
 \begin{equation}\label{eq:darcy}
   \frac{\partial}{\partial t} (\rho \theta_s) + \nabla \cdot \rho \Big( -\frac{(1-k_r) \kappa}{\mu} \nabla p \Big) = 0
 \end{equation}
-Here $\rho$ is the fluid density; $\nabla$ is the del operator; $\kappa$ is the saturated permeability; $\mu$ is the fluid viscosity; and $p$ is the fluid pressure.
-We assume that the contaminant vapors are so dilute that the gas flow properties can be taken to be those of air, and specifically at 20 Celsius.\par
+Here $\rho$ is the fluid density;
+$\nabla$ is the del operator;
+$\kappa$ is the saturated permeability;
+$\mu$ is the fluid viscosity; and $p$ is the fluid pressure.
+We assume that the contaminant vapors are so dilute that the gas flow properties can be taken to be those of air, and specifically at 20 \degree C and all the transport properties may be found in Table \ref{tbl:model}.\par
 
-To solve \eqref{eq:darcy} we need to specify some boundary and initial conditions.
-In this VI scenario, we assume that there is a pressure difference between the indoor and outdoor.
-To reflect this we assume that the ground surface is the datum and thus pressure here is always zero.
-Likewise, to reflect the pressure difference, we assign its value directly to the foundation crack boundary.
-The rest of the boundaries are no flow boundaries and the initial condition is zero Pa.
-These conditions are summarized in Table \ref{tbl:model}.\par
+\paragraph{Boundary Conditions}\label{par:darcy_bc}
 
-\subsubsection{Mass Transport In The Vadose Zone}
+To solve \eqref{eq:darcy} we assign the atmosphere boundary (see Figure \ref{fig:model}) to be at reference pressure and act as a gauge, i.e. zero pressure.
+The foundation crack boundary is assigned the indoor-outdoor pressure difference value.
+Remaining boundaries are no-flow boundary conditions.
+\begin{align}
+  &\text{Atmosphere} & p = 0 \mathrm{(Pa)} \\
+  &\text{Foundation crack} & p = p_\mathrm{in/out} \mathrm{(Pa)} \\
+  &\text{All other} & -\vec{n}\cdot\rho_\mathrm{air}\vec{u} = 0
+\end{align}
+Here $\vec{n}$ and $\vec{u}$ are the boundary normal and gas velocity vectors.
+
+\paragraph{Initial Conditions}\label{darcy_ic}
+
+For steady-state problems, the initial conditions don't matter, but is simply zero for the entire domain.
+When solving transient, the initial conditions are given by the steady-state solution.\par
+
+\subsubsection{Mass Transport In The Vadose Zone}\label{sec:mass_transport}
 
 
+\paragraph{Boundary Conditions}\label{par:mass_transport_bc}
 
 \subsubsection{Indoor Environment}
 
+The indoor air space is modeled as a continuously stirred tank reactor (CSTR) given by \eqref{eq:cstr}.
+Contaminants are assumed to only enter through the foundation crack, represented by $n_\mathrm{entry}$, which is calculated by integrating the contaminant flux over the foundation crack boundary.
+The product of air exchange rate, which govern how many house volumes are exchanged with the outside per time unit, and indoor air contaminant concentration gives the contaminant exit rate.
+The sorption of contaminant is given by the sorption reaction term in \eqref{eq:sorption_rate} and the sorbed contaminant concentration is given by \eqref{eq:sorbed_concentration}.
+
+\begin{align}
+  V_\mathrm{bldg} \frac{\partial c_\mathrm{in}}{\partial t} &= n_\mathrm{entry} - A_e c_\mathrm{in} V_\mathrm{bldg} + r_\mathrm{sorb} V_\mathrm{mat}\label{eq:cstr} \\
+  V_\mathrm{mat} \frac{\partial c_\mathrm{sorb}}{\partial t} &= -r_\mathrm{sorb} V_\mathrm{mat}\label{eq:sorbed_concentration} \\
+  r_\mathrm{sorb} &= k_1 c_\mathrm{sorb} - k_2 c_\mathrm{in}\label{eq:sorption_rate}
+\end{align}
+
+Here $V_\mathrm{bldg}$ and $V_\mathrm{mat}$ are the indoor control volume and volume of indoor material in $\mathrm{m^3}$;
+$c_\mathrm{in}$ and $c_\mathrm{sorb}$ are the indoor and sorbed (onto the indoor material) contaminant concentrations in $\mathrm{mol/m^3}$;
+$n_\mathrm{entry}$ is the contaminant entry rate in $\mathrm{mol/s}$;
+$r_\mathrm{sorb}$ sorption rate in $\mathrm{mol/(m^3 \cdot s)}$;
+$k_1$ and $k_2$ are desorption and sorption reaction constants in $\mathrm{1/s}$.\par % TODO: Make sure this is right.
+
+\paragraph{Fitting Kinetic Parameters}\label{par:fitting}
+
+To calculate the indoor sorption rate we need $k_1$ and $k_2$.
+These values are found by solving \eqref{eq:sorption_rate} numerically and then finding the best $k_1$ and $k_2$ by fitting them to the experimental data via least square.
+We use Runge-Kutta method of order 5(4) as the numerical solve, which is implemented together with the least square method in the SciPy python package\cite{jones_scipy_2011}.
 
 
-
-Table \ref{tbl:model} summarizes the governing equations, boundary and initial conditions, and parameters used in the numerical model.
+% TODO: Create table of all the constants and values used
+\begin{table}
+  \caption{Transport properties and model parameters}
+  \label{tbl:model}
+\end{table}
