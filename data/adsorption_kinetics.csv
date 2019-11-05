@@ -21,11 +21,11 @@ paper,2155,11.7488
 paper,2592,14.5173
 paper,2992,13.9694
 paper,4205,15.7503
-concrete,60,7.2628
-concrete,180,29.0123
-concrete,180,24.9945
-concrete,1051,114.0974
-concrete,2548,117.5364
+cinderblock,60,7.2628
+cinderblock,180,29.0123
+cinderblock,180,24.9945
+cinderblock,1051,114.0974
+cinderblock,2548,117.5364
 carpet,60,0.264
 carpet,180,0.823
 carpet,180,0.3072

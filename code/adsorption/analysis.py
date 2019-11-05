@@ -51,7 +51,7 @@ class Material:
     def set_material_density(self):
         material = self.get_material()
         # densities in g/m^3
-        density = {'drywall': 0.6e6, 'concrete': 2.0e6,
+        density = {'drywall': 0.6e6, 'cinderblock': 2.0e6,
                    'carpet': 1.314e6, 'wood': 0.86e6, 'paper': 0.8e6, 'soil': 1.46e6}
         # soil is based on sandy loam data
         self.rho = density[material]
@@ -61,7 +61,7 @@ class Material:
         return self.rho
 
     def get_materials(self):
-        return ['drywall', 'concrete', 'carpet', 'wood', 'paper', 'soil']
+        return ['drywall', 'cinderblock', 'carpet', 'wood', 'paper', 'soil']
 
 
 class COMSOL(Data):
@@ -136,7 +136,7 @@ class Experiment(Data):
 
 
 class Kinetics(Experiment, Material, Contaminant):
-    def __init__(self, file='../../data/adsorption_kinetics.csv', material='concrete', contaminant='TCE', T=298, P=101325):
+    def __init__(self, file='../../data/adsorption_kinetics.csv', material='cinderblock', contaminant='TCE', T=298, P=101325):
         Experiment.__init__(self, file)
         Material.__init__(self, material)
         Contaminant.__init__(self, contaminant)
@@ -273,7 +273,7 @@ class Kinetics(Experiment, Material, Contaminant):
 
 
 class IndoorSource(COMSOL, Material, Contaminant):
-    def __init__(self, file, material='concrete', contaminant='TCE', zero_entry_rate=False):
+    def __init__(self, file, material='cinderblock', contaminant='TCE', zero_entry_rate=False):
         COMSOL.__init__(self, file)
         Contaminant.__init__(self, contaminant)
         self.zero_entry_rate = zero_entry_rate
@@ -366,7 +366,7 @@ class IndoorSource(COMSOL, Material, Contaminant):
     def get_penetration_depth(self, material):
         material = self.get_material()
         # depth to which contaminant has been adsorbed/penetrated into the material
-        penetration_depth = {'concrete': 5e-3, 'wood': 1e-3,
+        penetration_depth = {'cinderblock': 5e-3, 'wood': 1e-3,
                              'drywall': 1e-2, 'carpet': 1e-2, 'paper': 1e-4}
         return penetration_depth[material]
 
@@ -453,7 +453,7 @@ class IndoorSource(COMSOL, Material, Contaminant):
 
 class Analysis:
     def get_kinetics_data(self):
-        materials = Material('concrete').get_materials()
+        materials = Material('cinderblock').get_materials()
         k1s, k2s, Ks = [], [], []
 
         for material in materials:
@@ -469,7 +469,7 @@ class Analysis:
         return data
 
     def generate_indoor_material_data(self, zero_entry_rate=False):
-        materials = Material('concrete').get_materials()[0:-1]
+        materials = Material('cinderblock').get_materials()[0:-1]
         materials.append('none')
         dfs = []
 

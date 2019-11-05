@@ -34,7 +34,7 @@ def indoor_adsorption():
 
     xlabel = 'Time (h)'
 
-    ax1.set(title='Building pressurization cycle', ylabel='$\\Delta p \\; \\mathrm{(Pa)}$', xlabel=xlabel)
+    ax1.set(title='Building pressurization', ylabel='$\\Delta p \\; \\mathrm{(Pa)}$', xlabel=xlabel)
     ax2.set(title='Sorption rate', ylabel='$r_{sorb} \\; \\mathrm{(\\mu g/h)}$', xlabel=xlabel)
     ax3.set(title='Indoor air contaminant concentration', ylabel='$c_{in} \\; \\mathrm{(\\mu g/m^3)}$', xlabel=xlabel)
 
@@ -52,7 +52,7 @@ def sorption_fit():
     Figure showing some of Shuai's data points and my kinetic model fit to them
     """
 
-    materials = ['wood', 'concrete']
+    materials = ['wood', 'soil', 'cinderblock']
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     handles = []
@@ -88,13 +88,13 @@ def sorption_fit():
     # custom handles and labels
     handles.append(plt.Line2D((0,1),(0,1),color='k'))
     handles.append(plt.Line2D((0,1),(0,1),marker='o',linestyle='None',color='k'))
-    labels.append('Fitted curve')
+    labels.append('Fitted curve')ylabel='$\\frac{\\alpha - \\alpha_0}{\\alpha_{eq} - \\alpha_0}$',
     labels.append('Experimental data')
 
     ax.legend(handles, labels, title='Material')
 
     ax.set(
-        title='Sorption of 1.12 $\\mathrm{ppb_v}$ of %s on %s and %s with fitted curves' % (kin.get_contaminant().upper(), materials[0], materials[1]),
+        title='Sorption of 1.12 $\\mathrm{ppb_v}$ of %s on cinderblock, soil, and wood with fitted curves' % kin.get_contaminant().upper(),
         xlabel='Time (min)',
         ylabel='Adsorbed mass (ng/g)'
         )
@@ -176,7 +176,7 @@ def time_to_equilibrium():
     Ks = df.index.levels[1]
     cycles = df.index.levels[2]
 
-    vars = ['alpha', 'u_ck', 'c_gas']
+    vars = ['alpha', 'c_gas',]
     titles = {
         'Overpressurization': 'Effect of overpressurizing building from -5 to 15 Pa',
         'Depressurization': 'Effect of depressurizing building from -5 to -15 Pa',
@@ -191,7 +191,7 @@ def time_to_equilibrium():
         ax1 = fig.add_subplot(gs[0,:])
         ax2 = fig.add_subplot(gs[1,0])
         ax3 = fig.add_subplot(gs[1,1])
-        axes = (ax1, ax2, ax3)
+        axes = (ax2, ax3)
         #soils = [soils[-1],] # temporary thing
         for soil in soils:
             for K in Ks:
@@ -199,7 +199,7 @@ def time_to_equilibrium():
                     df_now = df.loc[(soil, K, cycle)]
                     p_end = df_now['p_in'].values[-1]
                     ss_now = ss.loc[(soil, 5.28, p_end)]
-
+                    df_now.plot(y='alpha', ax=ax1, legend=False)
                     for ax, var in zip(axes, vars):
                         var_0 = df_now[var].values[0] # intial value
                         var_eq = ss_now[var] # equilibrium values
@@ -211,23 +211,24 @@ def time_to_equilibrium():
 
         ax1.set(
             #ylim=[0,1],
-            title='Distance from new indoor air concentration equilibrium',
-            ylabel='$\\frac{\\alpha - \\alpha_0}{\\alpha_{eq} - \\alpha_0}$',
+            title='Indoor air concentration over time (as attenuation factor)',
+            ylabel='$\\alpha$',
+            #yscale='log',
         )
         ax2.set(
             #ylim=[0,1],
-            title='... flow velocity through crack equilibrium',
-            ylabel='$\\frac{u - u_0}{u_{eq} - u_0}$',
+            title='Attenuation factor distance from new equilibrium',
+            ylabel='$\\frac{\\alpha - \\alpha_0}{\\alpha_{eq} - \\alpha_0}$',
         )
         ax3.set(
             #ylim=[1e-6, 1],
-            title='... soil-gas equilibrium near crack',
-            ylabel='$\\frac{c - c_0}{c_{eq} - c_0}$',
+            title='Soil-gas concentration near crack ...',
+            ylabel='$\\frac{c_{g} - c_{0,g}}{c_{eq,g} - c_{0,g}}$',
+            yscale='log',
         )
-        ax3.set(yscale='log')
 
-
-        handles, labels = ax1.get_legend_handles_labels()
+        ax1.ticklabel_format(axis='y', style='sci') # TODO: Figure out why this doesn't work
+        handles, labels = ax2.get_legend_handles_labels()
         ax1.legend([],[],loc='center left',bbox_to_anchor=(1.60,1))
         fig.legend(handles, labels, title='Soil & sorptivity',loc='center left', bbox_to_anchor=(0.72,0.5))
 
@@ -241,9 +242,9 @@ def time_to_equilibrium():
 
 # story
 sorption_fit()
-time_to_equilibrium()
-indoor_adsorption()
-indoor_adsorption_zero_entry()
+#time_to_equilibrium()
+#indoor_adsorption()
+#indoor_adsorption_zero_entry()
 
 
 plt.show()
