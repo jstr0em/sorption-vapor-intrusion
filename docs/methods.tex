@@ -104,9 +104,9 @@ To solve \eqref{eq:darcy} we assign the atmosphere boundary (see Figure \ref{fig
 The foundation crack boundary is assigned the indoor-outdoor pressure difference value.
 Remaining boundaries are no-flow boundary conditions.
 \begin{align}
-  &\text{Atmosphere} & p = 0 \mathrm{(Pa)} \\
-  &\text{Foundation crack} & p = p_\mathrm{in/out} \mathrm{(Pa)} \\
-  &\text{All other} & -\vec{n}\cdot\rho_\mathrm{air}\vec{u} = 0
+  &\text{Atmosphere} & p = 0 \; \mathrm{(Pa)} \\
+  &\text{Foundation crack} & p = p_\mathrm{in/out} \; \mathrm{(Pa)} \\
+  &\text{All other} & -\vec{n}\cdot\rho_\mathrm{air}\vec{u} = 0 \; \mathrm{(kg/(m^2\cdot s))}
 \end{align}
 Here $\vec{n}$ and $\vec{u}$ are the boundary normal and gas velocity vectors.
 
@@ -117,8 +117,93 @@ When solving transient, the initial conditions are given by the steady-state sol
 
 \subsubsection{Mass Transport In The Vadose Zone}\label{sec:mass_transport}
 
+Contaminants in the vadose zone exist in three phases - gaseous, solved in water, and sorbed onto soil particles.
+While there are three distinct phases, the water and gas phases are related via Henry's Law \eqref{eq:henrys_law}.
+\begin{equation}\label{eq:henrys_law}
+  c_g = K_H c_w
+\end{equation}
+Where $c_g$ and $c_w$ are the gas and water phase concentrations respectively in $\mathrm{mol/m^3}$;
+$K_H$ is the dimensionless Henry's Law constant.\par
+
+In this work, we consider sorption between the soil and vapor phases, as a function of the water contaminant concentration, through linear sorption \eqref{eq:linear_sorption}.
+\begin{equation}\label{eq:linear_sorption}
+  c_s = \rho_b c_g = \frac{\rho}{1-\theta_t} K_H c_w
+\end{equation}
+Here the $c_s$ is the solid phase concentration in $\mathrm{mol/kg}$;
+$\rho_b$ is the bulk density of the soil $\mathrm{kg/m^3}$, which is given by the density $\rho$ and the total soil porosity $\theta_t$.
+Using these two relations we can express the total contaminant concentration in terms of the water contaminant concentration.\par
+
+Mass transport in the vadose zone is governed by diffusion and advection and is given by \eqref{eq:mass_transport}.
+\begin{equation}\label{eq:mass_transport}
+  R \frac{\partial c}{\partial t} =
+    \nabla \cdot[ D_\mathrm{eff} \nabla c] -
+    K_H \vec{u} \cdot \nabla c
+\end{equation}
+The first term in \eqref{eq:mass_transport} gives the change in contaminant water concentration with respect to time, modified by the \textit{retardation factor}, $R$, which is discussed below;
+The second is the effective diffusive flux which is modified by the effective diffusion coefficient $D_\mathrm{eff}$ which is also discussed below.
+The third is the advective flux where $\vec{u}$ is the soil-gas velocity from Darcy's Law, which when multiplied with $K_H$ gives the gas phase concentration advective flux.\par
+
+\paragraph{Contaminant entry into the building}
+
+The contaminant enters the building through a combination of advection and diffusive fluxes and is given by \eqref{eq:contaminant_entry}.
+\begin{equation}\label{eq:contaminant_entry}
+  j_{ck} = \begin{cases}
+    u_{ck} c_g - \frac{D_\mathrm{air}}{L_\mathrm{slab}} (c_{in} - c_g) & u_{ck} \geq 0 \\
+    u_{ck} c_{in} - \frac{D_\mathrm{air}}{L_\mathrm{slab}} (c_{in} - c_g) & u_{ck} < 0
+\end{cases}
+\end{equation}
+Here the $j_{ck}$ is the molar contaminant flux into the building in $\mathrm{mol/(m^2 \cdot s)}$;
+$D_\mathrm{air}$ is the contaminant diffusion coefficient in pure air in $\mathrm{m^2/s}$;
+$L_\mathrm{slab}$ is the thickness of the foundation slab in $\mathrm{m}$.
+The flux expression changes if there is a bulk flow into the building, i.e. $u_{ck} \geq 0$, or out of the building.
+
+\paragraph{Retardation factor}
+
+As the contaminants are transported through the vadose zone, the partitioning between the various phases increases the contaminant residency time, retarding the transport of contaminants.
+This effect is represented by $R$ which is the retardation factor \eqref{eq:retardation_factor}.
+\begin{equation}\label{eq:retardation_factor}
+  R = \theta_w + \theta_g K_H + \rho_b K_H K_\mathrm{ads}
+\end{equation}
+Here $\theta_w$, $\theta_g$ are the water and gas filled soil porosities;
+$K_\mathrm{ads}$ is the solid-gas phase sorption isotherm in $\mathrm{m^3/kg}$.
+The diffusive and advective transport retardation is proportional to the inverse of $R$.
+\begin{align}
+  D_\mathrm{retarded} &= \frac{D_\mathrm{eff}}{R} \\
+  \vec{u}_\mathrm{retarded} &= \frac{\vec{u}}{R}
+\end{align}
+It should be noted that the soil-gas velocity, $\vec{u}$, is not retarded in of itself, but rather just the contaminant being transported through advection, giving a effective bulk velocity.\par
+
+\paragraph{Effective diffusivity}
+
+The effective diffusivity in the vadose zone varies with the soil moisture content, from being close to that in water when fully saturated and vice versa.
+Millington-Quirk developed \eqref{eq:millington-quirk} which describes the effective diffusivity in variably saturated porous media.
+\begin{equation}\label{eq:millington-quirk}
+  D_\mathrm{eff} = D_\mathrm{water} \frac{\theta_w^\frac{7}{3}}{\theta_t^2} + \frac{D_\mathrm{air}}{K_H} \frac{\theta_g^\frac{7}{3}}{\theta_t^2}
+\end{equation}
+Where the porosity fractions are the water and gas phase tortuosity terms;
+$D_\mathrm{air}$ and $D_\mathrm{water}$ are the contaminant diffusion coefficient in air and water respectively in $\mathrm{m^2/s}$.\par
 
 \paragraph{Boundary Conditions}\label{par:mass_transport_bc}
+
+A few boundary conditions are required to solve \eqref{eq:mass_transport}.
+In this model, the sole contaminant source is assumed to be the homogenously contaminated groundwater, which we assume to have a fixed concentration.
+The atmosphere acts as a contaminant sink, and any contaminant that makes it to this boundary is ifinitely diluted, thus this is simply a zero concentration boundary condition.
+Contaminants leave the soil domain and enter the building through a combination of advective and diffusive gas phase transport.
+The last boundary condition is applied to all other boundaries and is a no-flow boundary.
+\begin{align}
+  &\text{Groundwater} & c_w = 0 \; \mathrm{(mol/m^3)} \\
+  &\text{Atmosphere} & c_w = c_{gw} \; \mathrm{(mol/m^3)} \\
+  &\text{Foundation crack} & -\vec{n} \cdot \vec{N} = - \frac{j_{ck}}{K_H} \; \mathrm{(mol/(m^2 \cdot s))}\\
+  &\text{All other} & -\vec{n} \cdot \vec{N} = 0 \; \mathrm{(mol/(m^2 \cdot s))}
+\end{align}
+$\vec{n} \cdot \vec{N}$ is the dot product between the boundary normal vector and the contaminant flux;
+$j_ck$ is the contaminant vapor flux into the building.
+We assume that only contaminants in the gas phase enter the building, and dividing $j_{ck}$ by $K_H$ we get proper accounting in terms of the water phase concentration.\par
+
+\paragraph{Initial Conditions}
+
+For a steady-state condition the initial conditions don't matter, but are set to be zero everywhere.
+For transient simulations in this work, the steady-state solution is always used as an initial condition.
 
 \subsubsection{Indoor Environment}
 
