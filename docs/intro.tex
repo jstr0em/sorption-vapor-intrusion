@@ -23,7 +23,7 @@ What do you want to convince people of?
 \section{Introduction}\label{sec:intro}
 
 % Attention grabbing intro
-Many vapor intrusion (VI) contaminants has the capacity to sorb onto soil and various common indoor materials, but the role and more importantly - the consequences of these sorption processes in VI are poorly understood.
+Many vapor intrusion (VI) contaminants has the capacity to sorb onto soil and various common indoor materials, but the role and more importantly - the consequences of these sorption processes in VI are poorly understood\cite{meininghaus_diffusion_2000,meininghaus_diffusion_2002,tillman_review_2005}.
 The migration of contaminant vapors from its source into the affected building and potential indoor sources are usually the prime concern in VI investigations.
 Rarely is the sorbed contaminant vapors in the soil or indoor considered in an investigation, but these may potentially act as a capacitor, storing and releasing contaminant vapors in response to a change in contaminant concentration.
 Consequently, contaminant vapors may be much more persistent at a site that has undergone remediation, potentially reducing the effectiveness of mitigation systems, or impeding site investigations.\par
@@ -33,15 +33,20 @@ Consequently, contaminant vapors may be much more persistent at a site that has 
 % - CPM and potential issues
 % - Remediation (are there any examples of vapor being more persistent?)
 % Separate paragraph for each?
-Measuring contaminant sorption onto materials or soils is not a regular part of VI investigations and thus very little is known of the potential impact of this.
-In this paper we will therefore begin to explore this topic through a combined effort of gathering experimental sorption data and incorporating it into three-dimensional finite element models of VI scenarios.
-These type of models have been used extensively before and are useful to illuminate some of these issues.
-The potential impact of sorption may perhaps be most significant in the application of the controlled pressure method and various mitigation schemes.\par
+Although it is recognized that sorption may be used to treat indoor air contaminants, and passive sorption tube samplers are used prolifically in VI investigations, measuring contaminant sorption onto materials or soils is not a regular part of VI investigations and thus very little is known of the potential impact of this\cite{u.s._environmental_protection_agency_oswer_2015}.\par
 
-The controlled pressure method (CPM) is the sequential forced over- and depressurization of a building which in theory max- and minimizes the contaminant entry to the building.
-Helping the investigator to ascertain the worst-case VI scenario and help identify potential indoor contaminant sources.
-However, if the building has a large capacity to sorb contaminant vapors onto various materials, these may be ad-/absorbed and desorbed in response to the changing condition, potentially preventing coresponding changes in indoor air contaminant concentrations.
-The same is true for various mitigation schemes, while they may successfully prevent contaminant vapors from entering the house, these may still be released from the interior over an unknown period of time.\par
+Over the years many VI sites have been investigated for their potential exposure risk.
+Most of these are conducted by private industries but a few notable academic ventures exist as well.
+Two well-known examples of these are the studies of "Sun Devil Manor" near Hill Air Force Base in Utah, and a building in Indianapolis, Indiana.
+Both of these sites were outfitted with a wide variety of instrumentation to investigate the VI drivers at these sites.
+These studies yielded some of the richest VI datasets available and gave invaluable insights, in particular in the application of CPM\cite{holton_long-term_2015} and sub-slab depressurization (SSD) mitigation systems\cite{lutes_comparing_2015,u.s._environmental_protection_agency_assessment_2015}.
+However, neither of these studies considered the role of sorption had at these sites.\par
+
+The potential impact of sorption may perhaps be most significant in the application of the controlled pressure method and various mitigation schemes.
+The controlled pressure method (CPM) is the forced over- and depressurization of a building to max- and minimize the contaminant entry to the building.
+This aids the investigator to ascertain the worst-case VI scenario and help identify potential indoor contaminant sources\cite{mchugh_recent_2017,holton_long-term_2015}.
+However, if the building has a large capacity to sorb contaminant vapors onto various materials, these may be sorbed and desorbed in response to the changing condition, potentially preventing corresponding changes in indoor air contaminant concentrations.
+The same is true for various mitigation schemes, while they may successfully prevent contaminant vapors from entering the house, these may still be released from the interior over an unknown period of time\cite{meininghaus_diffusion_2000,meininghaus_diffusion_2002}.\par
 
 % Background on TCE and sorption capacity on materials (Shuai's part). Cover:
 % - Which contaminants/material pairs have been investigated? What has been found?
@@ -50,7 +55,16 @@ The same is true for various mitigation schemes, while they may successfully pre
 % Why use modeling for this? Cover:
 % - Briefly why we wish to model
 % - Sorption in other models and their applications (or lack thereof I should say)
-
-
+In the past VI models have been used to gain insight into VI when no field or experimental data has been available.
+Previously examples of VI modeling studies are the role of rainfall in VI\cite{shen_numerical_2012}, or drivers of temporal variability in some of the aforementioned sites\cite{strom_factors_2019}.
+However, while many VI models include a sorption term in the governing equation for contaminant transport in soils, none have explored the role of sorption in VI.
+The reason for this is two-fold.
+First, there has been a general lack of interest in sorption and VI thus far.
+Secondly, the vast majority of VI modeling efforts and studies has focused on steady-state analyses of VI, and sorption only affects soil contaminant transport in time-dependent scenarios.\par
 
 % Final paragraph - outlining what we will do:
+To bridge this knowledge gap we will begin to explore the role of sorption in VI through a combined effort of experimental and simulation work.
+Sorption data of TCE on various common indoor materials and Appalian soil will be measured in a flow-chamber experiment. % TODO: Make sure Shuai agrees with this description.
+These sorption data will then be incorporated into a three-dimensional finite element model of VI.
+For this purpose we will consider a prototypical VI scenario where a free-standing house with a basement is overlying a homogenously contaminated groundwater source.
+Using this model we will investigate how the dynamic contaminant transport is affected in general by sorption, how indoor sorption materials affect indoor air concentration as the building's pressurization fluctuates and how indoor air concentration are affected by indoor materials following successful mitigation of the structure.
