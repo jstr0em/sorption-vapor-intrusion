@@ -88,7 +88,7 @@ def sorption_fit():
     # custom handles and labels
     handles.append(plt.Line2D((0,1),(0,1),color='k'))
     handles.append(plt.Line2D((0,1),(0,1),marker='o',linestyle='None',color='k'))
-    labels.append('Fitted curve')ylabel='$\\frac{\\alpha - \\alpha_0}{\\alpha_{eq} - \\alpha_0}$',
+    labels.append('Fitted curve')
     labels.append('Experimental data')
 
     ax.legend(handles, labels, title='Material')
@@ -242,9 +242,13 @@ def time_to_equilibrium():
 
 # story
 sorption_fit()
-#time_to_equilibrium()
-#indoor_adsorption()
-#indoor_adsorption_zero_entry()
+plt.savefig('../../figures/sorption_fit.pdf')
+time_to_equilibrium()
+plt.savefig('../../figures/equilibrium_retardation.pdf')
+indoor_adsorption()
+plt.savefig('../../figures/sorption_indoor_cycle.pdf')
+indoor_adsorption_zero_entry()
+plt.savefig('../../figures/sorption_mitigation.pdf')
 
 
 plt.show()
