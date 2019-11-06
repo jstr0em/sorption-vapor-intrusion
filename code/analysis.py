@@ -1,445 +1,534 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-import sqlite3
-from utils import get_log_ticks
+import pandas as pd
+from scipy.integrate import odeint, ode, solve_ivp
+from scipy.optimize import curve_fit, leastsq
+from scipy.interpolate import interp1d
 
 
-class Season:
-    def __init__(self):
-
-        data = pd.read_csv('./data/indianapolis.csv')
-
-        g = sns.boxplot(
-            x="Season",
-            y="logIndoorConcentration",
-            hue="Contaminant",
-            data=data,
-        )
-
-        ticks, labels = get_log_ticks(-1,1,'f')
-        g.axes.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
-
-        plt.savefig('./figures/analysis/season.png', dpi=300)
-        plt.savefig('./figures/analysis/season.pdf', dpi=300)
-
-        #plt.show()
+class Data:
+    def __init__(self, file):
+        self.path = file
         return
 
-class Snow:
-    def __init__(self):
+    def get_path(self):
+        return self.path
 
-        data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Contaminant']=='Chloroform')]
+    def get_data(self):
+        return self.data
 
-        g = sns.boxplot(
-            x="SnowDepth",
-            y="logIndoorConcentration",
-            hue="Season",
-            data=data,
-        )
 
-        ticks, labels = get_log_ticks(-1,1,'f')
-        g.axes.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
-        plt.savefig('./figures/analysis/snowdepth.png', dpi=300)
-        plt.savefig('./figures/analysis/snowdepth.pdf', dpi=300)
+class Contaminant:
+    def __init__(self, contaminant):
 
-        #plt.show()
+        self.contaminant = contaminant
+        self.set_molar_mass()
         return
 
-class AC:
-    def __init__(self):
-
-        data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[ (data['Contaminant']=='Chloroform')]
-        g = sns.boxplot(
-            x="AC",
-            y="logIndoorConcentration",
-            hue="Season",
-            data=data,
-        )
-
-        ticks, labels = get_log_ticks(-1,1,'f')
-        g.axes.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
-        plt.savefig('./figures/analysis/ac.png', dpi=300)
-        plt.savefig('./figures/analysis/ac.pdf', dpi=300)
-
-        #plt.show()
+    def set_molar_mass(self):
+        contaminant = self.get_contaminant()
+        # molar masses are in (g/mol)
+        M = {'TCE': 131.38}
+        self.M = M[contaminant]
         return
 
-class Heating:
-    def __init__(self):
+    def get_contaminant(self):
+        return self.contaminant
 
-        data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Contaminant']=='Chloroform')]
+    def get_molar_mass(self):
+        return self.M
 
-        g = sns.boxplot(
-            x="Heating",
-            y="logIndoorConcentration",
-            hue="Season",
-            data=data,
-        )
 
-        ticks, labels = get_log_ticks(-1,1,'f')
-        g.axes.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
-        plt.savefig('./figures/analysis/heating.png', dpi=300)
-        plt.savefig('./figures/analysis/heating.pdf', dpi=300)
-
-        #plt.show()
+class Material:
+    def __init__(self, material):
+        self.material = material
+        self.set_material_density()
         return
 
-class OutdoorTemp:
-    def __init__(self):
+    def get_material(self):
+        return self.material
 
-        data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Contaminant']=='Chloroform')]
-
-
-        g = sns.regplot(
-            x="OutdoorTemp",
-            y="logIndoorConcentration",
-            #hue="Contaminant",
-            data=data,
-        )
-
-        ticks, labels = get_log_ticks(-1,1,'f')
-        g.axes.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
-        plt.savefig('./figures/analysis/outdoor_temp.png', dpi=300)
-        plt.savefig('./figures/analysis/outdoor_temp.pdf', dpi=300)
-
-        #plt.show()
+    def set_material_density(self):
+        material = self.get_material()
+        # densities in g/m^3
+        density = {'drywall': 0.6e6, 'cinderblock': 2.0e6,
+                   'carpet': 1.314e6, 'wood': 0.86e6, 'paper': 0.8e6, 'soil': 1.46e6}
+        # soil is based on sandy loam data
+        self.rho = density[material]
         return
 
-class Correlations:
-    def __init__(self):
+    def get_material_density(self):
+        return self.rho
 
-        data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[(data['Contaminant']=='Chloroform')]
-
-        print(list(data))
-
-        cols = [
-            'logIndoorConcentration',
-            'IndoorOutdoorPressure',
-            'OutdoorTemp',
-            'Rain',
-            'WindSpeed',
-            'IndoorHumidity',
-            'OutdoorHumidity',
-            'SnowDepth',
-            'BarometricPressure',
-        ]
+    def get_materials(self):
+        return ['drywall', 'cinderblock', 'carpet', 'wood', 'paper', 'soil']
 
 
-        corr = data[cols].corr()
+class COMSOL(Data):
+    """
+    Class to load, process, and return the COMSOL simulation data
+    """
 
-        fig, ax = plt.subplots(dpi=300)
-        cmap = sns.diverging_palette(220, 10, as_cmap=True)
-        sns.heatmap(
-            corr,
-            cmap=cmap,
-            ax=ax,
-            annot=True,
-            fmt='1.1f',
-        )
-        plt.tight_layout()
-        plt.show()
+    def __init__(self, file):
+        Data.__init__(self, file)
+        self.process_raw_data()
+        self.A_ck = 0.1 * 4
         return
 
-class DiurnalTemp:
-    def __init__(self):
-        data = pd.read_csv('./data/indianapolis.csv')
-        #data = data.loc[(data['Contaminant']=='Chloroform')]
-        data['Time'] = data['Time'].apply(pd.to_datetime)
+    def get_crack_area(self):
+        return self.A_ck
 
-        fig, ax1 = plt.subplots(dpi=300)
+    def get_raw_data(self):
+        return pd.read_csv(self.get_path(), header=4)
 
-        ax2 = ax1.twinx()
+    def get_renaming_scheme(self):
+        renaming = {'% Time (h)': 'time', 'p_in (Pa)': 'p_in', 'alpha (1)': 'alpha',
+                    'c_in (ug/m^3)': 'c_in', 'j_ck (ug/(m^2*s))': 'j_ck', 'm_ads (g)': 'm_ads',
+                    'c_ads (mol/kg)': 'c_ads',
+                    'c_ads/c_gas (1)': 'c_ads/c_gas', 'alpha_ck (1)': 'alpha_ck',
+                    'n_ck (ug/s)': 'n_ck', 'Pe (1)': 'Pe', 'c_gas (ug/m^3)': 'c_gas',
+                    'u_ck (cm/h)': 'u_ck', '% K_ads (m^3/kg)': 'K_ads','K_ads (m^3/kg)': 'K_ads',
+                    't (h)': 'time', 'c_ads_vol (ug/m^3)': 'c_ads_vol', 'c_liq (ug/m^3)': 'c_liq',
+                    '% Pressurization cycles index': 'p_cycle',
+                    'Pressurization cycles index': 'p_cycle', 'Q_ck (L/h)': 'Q_ck',
+                    '% matsw.comp1.sw1': 'soil', '% Switch 1 index': 'soil',
+                    }
+        return renaming
 
-        for season in data['Season'].unique():
+    def process_raw_data(self):
+        raw_df = self.get_raw_data()
+        # removes the druplicate columns from read_csv
+        for col in list(raw_df):
+            if '.1' in col:
+                raw_df.drop(columns=col, inplace=True)
 
-            diurnal = data.loc[data['Season']==season][['Time','OutdoorTemp','logIndoorConcentration']].groupby(data['Time'].dt.hour).median()
-            diurnal.plot(y='OutdoorTemp',label=season, ax=ax1)
-            diurnal.plot(y='logIndoorConcentration', ax=ax2, style='--', legend=False)
-
-
-        ax1.legend()
-        plt.show()
-        return
-
-class TempCorrelation:
-
-    def __init__(self):
-        data = pd.read_csv('./data/indianapolis.csv').dropna()
-
-        g = sns.PairGrid(
-            data[['logIndoorConcentration','OutdoorTemp','OutdoorHumidity','IndoorHumidity','Season']],
-            hue='Season',
-            diag_sharey=False,
-        )
-
-        g.map_diag(sns.kdeplot, shade=True)
-        g.map_offdiag(sns.regplot, x_bins=10)
-        g = g.add_legend()
-        plt.show()
-        return
-
-class TimePlot:
-    def __init__(self):
-        data = pd.read_csv('./data/indianapolis.csv')
-        data = data.loc[data['Contaminant']=='Chloroform']
-        data['Time'] = data['Time'].apply(pd.to_datetime)
-
-
-        fig, ax1 = plt.subplots(dpi=300)
-        ax2 = ax1.twinx()
-
-        sns.lineplot(
-            data=data,
-            x='Time', # uses index
-            y='IndoorConcentration',
-            ax=ax1,
-        )
-
-        sns.lineplot(
-            data=data,
-            x='Time',
-            y='Rain',
-            ax=ax2,
-            color='orange',
-        )
-
-        sns.lineplot(
-            data=data,
-            x='Time',
-            y='SnowDepth',
-            ax=ax2,
-            color='red',
-        )
-
-        ax1.set(
-            yscale='log',
-        )
-
-        plt.show()
-
+        self.data = raw_df.rename(columns=self.get_renaming_scheme())
 
         return
 
-class SoilTemp:
-    def __init__(self):
-        data = pd.read_csv('./data/indianapolis.csv')
-        data['Time'] = data['Time'].apply(pd.to_datetime)
+    def get_time_data(self):
+        df = self.get_data()
+        return df['time'].values
 
-        fig, (ax1,ax2) = plt.subplots(2,1,dpi=300,sharex=True)
+    def get_entry_flux_data(self):
+        df = self.get_data()
+        return df['j_ck'].values
 
-        data.plot(
-            x='Time',
-            y=['OutdoorTemp', 'SoilTempDepth1.8','SoilTempDepth2.7','SoilTempDepth4.0','SoilTempDepth5.0'],
-            ax=ax1,
-        )
+    def get_entry_rate_data(self):
+        df = self.get_data()
+        return df['n_ck'].values
 
-
-        data.plot(
-            x='Time',
-            y=['OutdoorTemp', 'logIndoorConcentration'],
-            secondary_y = 'logIndoorConcentration',
-            ax=ax2,
-        )
+    def get_concentration_data(self):
+        df = self.get_data()
+        return df['c_in'].values
 
 
-        ax1.legend(loc='upper right')
-        plt.show()
+class Experiment(Data):
+    def __init__(self, file):
+        Data.__init__(self, file)
+        self.set_raw_data()
+        return
+
+    def set_raw_data(self):
+        path = self.get_path()
+        self.data = pd.read_csv(path)
         return
 
 
-class BuildingSides:
-    # TODO: Add class methods for each analysis step?
-    def __init__(self):
-        data = pd.read_csv('./data/indianapolis.csv')
-        data['Time'] = data['Time'].apply(pd.to_datetime)
-        self.data = data.loc[(data['Contaminant']=='Chloroform')]
-
-        self.indoor_concentration_timeplot()
-        self.indoor_concentration_catplot()
-        self.correlation()
-
-        plt.show()
-        # TODO: Fix the plotting of the 'side' column. Perhaps will help to make it into a string? Hasn't worked very well so far though.
-
-
-        # TODO: Correlational studies here?
-
-        plt.show()
+class Kinetics(Experiment, Material, Contaminant):
+    def __init__(self, file='../data/adsorption_kinetics.csv', material='cinderblock', contaminant='TCE', T=298, P=101325):
+        Experiment.__init__(self, file)
+        Material.__init__(self, material)
+        Contaminant.__init__(self, contaminant)
+        self.contaminant = contaminant
+        self.T = T
+        self.P = P
         return
 
-    def indoor_concentration_timeplot(self):
+    def get_thermo_states(self):
+        """
+        Method that returns the temperature and pressure of the system.
 
-        fig, (ax1, ax2) = plt.subplots(2,1,sharex=True,dpi=300)
+        Return:
+            tuple: temperature (K), absolute pressure (Pa)
+        """
+        return self.T, self.P
 
-        sns.lineplot(
-            data=self.data,
-            x='Time',
-            y='IndoorConcentration',
-            hue='Side',
-            ax=ax1,
-        )
+    def get_gas_const(self):
+        return 8.31446261815324
 
-        ax1.set(yscale='log')
+    def get_gas_conc(self, part_by_part=1.12e-9):
+        """
+        Method that converts the air concentration from part by part to mol/m^3
 
-        sns.lineplot(
-            data=self.data,
-            x='Time',
-            y='SubslabPressure',
-            hue='Side',
-            ax=ax2,
-        )
+        Args:
+            (optional): Part-by-part of the contaminant
 
-        return
+        Return:
+            Air concentration (mol/m^3)
+        """
+        # gas constant
+        R = self.get_gas_const()  # (J/(mol*K))
+        T, P = self.get_thermo_states()
+        M = self.get_molar_mass()
+        return P * part_by_part / (R * T)
 
-    def indoor_concentration_catplot(self):
-        fig, (ax1, ax2) = plt.subplots(1,2,dpi=300)
+    def get_adsorbed_conc(self):
+        """
+        Return:
+            Moles of contaminant sorbed unto material (mol/m^3)
+        """
+        mass_by_mass = self.get_adsorption_data()
+        rho = self.get_material_density()
+        M = self.get_molar_mass()
+        return mass_by_mass * rho / 1e9 / M
 
-        sns.boxplot(
-            data=self.data,
-            x='Season',
-            y='logIndoorConcentration',
-            hue='Side',
-            ax=ax1,
-            whis=10,
-        )
+    def adsorption_kinetics(self, c_star, t, k1, k2):
+        c = self.get_gas_conc()
+        r = k1 * c_star - k2 * c
+        return -r
 
+    def get_time_data(self):
+        """
+        Return:
+            Adsorption time data (hr)
+        """
+        material = self.get_material()
+        data = self.get_data()
+        data = data.loc[data['material'] == material]
+        return np.append(0, data['time'].values) / 60
 
-        ticks, labels = get_log_ticks(-2,0,'f')
+    def get_adsorption_data(self):
+        material = self.get_material()
+        data = self.get_data()
+        data = data.loc[data['material'] == material]
 
-        ax1.set(
-            yticks=ticks,
-            yticklabels=labels,
-        )
+        mass_by_mass = np.append(0, data['mass'].values)
+        return mass_by_mass
 
-        sns.boxplot(
-            data=self.data,
-            x='Season',
-            y='SubslabPressure',
-            hue='Side',
-            ax=ax2,
-            whis=1e3,
-        )
+    def solve_reaction(self, t, k1, k2):
+        c_star = odeint(self.adsorption_kinetics, t=t,
+                        y0=0, args=(k1, k2), mxstep=5000)
+        return c_star.flatten()
 
-        return
+    def get_reaction_constants(self):
+        """
+        Returns the fitted reaction constants
 
-    def correlation(self):
+        arg:
+            None
+        return:
+            k1 : desorption rate (1/hr)
+            k2 : adsorption rate (1/hr)
+            K : equilibrium constant (1)
+        """
+        t_data = self.get_time_data()
+        c_star_data = self.get_adsorbed_conc()
 
-        data = self.data
-        cols = [
-            'logIndoorConcentration',
-            'SubslabPressure',
-            'OutdoorTemp',
-            'Rain',
-            'WindSpeed',
-            'IndoorHumidity',
-            'OutdoorHumidity',
-            'SnowDepth',
-            'BarometricPressure',
-        ]
+        popt, pcov = curve_fit(self.solve_reaction, t_data,
+                               c_star_data, p0=[1e-2, 1e2])
 
+        k1, k2 = popt
+        K = k1 / k2
+        return k1, k2, K
 
-        fig, (ax1, ax2) = plt.subplots(1,2,sharey=True,dpi=300)
-        cmap = sns.diverging_palette(220, 10, as_cmap=True)
-        sns.heatmap(
-            data.loc[data['Side']=='Unheated'][cols].corr(),
-            cmap=cmap,
-            ax=ax1,
-            annot=True,
-            fmt='1.1f',
-        )
+    def get_isotherm(self):
+        """
+        Returns the linear adsorption isotherm
 
-        ax1.set(
-            title='Unheated',
-        )
-
-        sns.heatmap(
-            data.loc[data['Side']=='Heated'][cols].corr(),
-            cmap=cmap,
-            ax=ax2,
-            annot=True,
-            fmt='1.1f',
-        )
-
-        ax2.set(
-            title='Heated',
-        )
-
-        plt.tight_layout()
-        return
-
-class TempPressure:
-    def __init__(self):
-        data = pd.read_csv('../data/indianapolis.csv')
-        data['Time'] = data['Time'].apply(pd.to_datetime)
-        data['TempDiff'] = data['IndoorTemp']-data['OutdoorTemp']
+        args:
+            None
+        return:
+            K_iso : adsorption isotherm (m^3/kg)
+        """
+        k1, k2, K = self.get_reaction_constants()
+        rho = self.get_material_density()
+        rho *= 1e-3  # converts to kg/m^3
+        return 1 / (K * rho)
 
 
+    def plot(self, save=False):
+
+        t_data = self.get_time_data()
+        c_star_data = self.get_adsorbed_conc()
+
+        k1, k2, K = self.get_reaction_constants()
+        M = self.get_molar_mass()
+        rho = self.get_material_density()
+
+        t = np.linspace(t_data[0], t_data[-1], 200)
+        c_star = self.solve_reaction(t, k1, k2)
 
         fig, ax = plt.subplots(dpi=300)
 
-        data.plot(
-            x='Time',
-            y=['OutdoorTemp','IndoorOutdoorPressure', 'TempDiff'],
-            secondary_y=['IndoorOutdoorPressure','TempDiff'],
-            ax=ax,
-        )
+        ax.plot(t_data * 60, c_star_data / rho * M * 1e9, 'ko', label='Data')
+        ax.plot(t * 60, c_star / rho * M * 1e9, 'k-', label='Fit')
 
-        fig, ax = plt.subplots(dpi=300)
+        ax.set(title='Sorption of %s on %s\n$k_1$ = %1.2e (1/hr), $k_2$ = %1.2e (1/hr), $K$ = %1.2e' % (self.get_contaminant().upper(), self.get_material(), k1, k2, K),
+               xlabel='Time (min)', ylabel='Adsorbed mass (ng/g)')
 
-        sns.kdeplot(
-            data=data['OutdoorTemp'].dropna(),
-            data2=data['IndoorOutdoorPressure'].dropna(),
-            ax=ax,
-            shade_lowest=False,
-            shade=True,
-        )
+        ax.legend()
 
-        fig, ax = plt.subplots(dpi=300)
-
-        sns.kdeplot(
-            data=data['TempDiff'].dropna(),
-            data2=data['IndoorOutdoorPressure'].dropna(),
-            ax=ax,
-            shade_lowest=False,
-            shade=True,
-        )
+        return
 
 
+class IndoorSource(COMSOL, Material, Contaminant):
+    def __init__(self, file, material='cinderblock', contaminant='TCE', zero_entry_rate=False):
+        COMSOL.__init__(self, file)
+        Contaminant.__init__(self, contaminant)
+        self.zero_entry_rate = zero_entry_rate
+        self.set_building_param()
+        self.set_entry_rate()
+        self.set_groundwater_concentration()
 
-        plt.show()
+        if material is 'none':
+            self.material = None
+        else:
+            Material.__init__(self, material)
+            self.set_material_volume()
+        return
+
+    def get_groudwater_concentration(self):
+        return self.c_gw
+    def set_groundwater_concentration(self):
+        df = self.get_data()
+        self.c_gw = df['c_in'].values[0]/df['alpha'].values[0]
+        return
+
+    def get_zero_entry_rate(self):
+        return self.zero_entry_rate
+    def get_air_exchange_rate(self):
+        return self.Ae
+
+    def get_building_volume(self):
+        return self.V
+
+    def get_room_area(self):
+        return self.A_room
+
+    def set_building_param(self, Ae=0.5, w_ck=1e-2, xyz=(10, 10, 3)):
+        x, y, z = xyz  # x, y, z, dimensions
+
+        A_floor = x * y  # area of the floor/ceilung
+        A_wall_y = y * z  # area of one type of wall
+        A_wall_x = x * z  # area of the other type of wall
+
+        # assigns parameters to class
+        self.V = x * y * z  # building/control volume
+        # surface area of the room
+        self.A_room = 2 * (A_floor + A_wall_y + A_wall_x)
+        self.Ae = Ae
+        return
+
+    def get_initial_concentration(self):
+
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+        M = self.get_molar_mass()
+
+        df = self.get_data()
+
+        return df['c_in'].values[0]/M/1e6
+
+    def set_entry_rate(self):
+        # gets time and entry rate data
+        t = self.get_time_data()
+
+        if self.get_zero_entry_rate():
+            self.n_ck = interp1d(t, np.repeat(0, len(t)), bounds_error=False, fill_value=0)
+            return
+
+        try:
+            n_ck = self.get_entry_rate_data() * 1e-6 / M
+        except:
+            j_ck = self.get_entry_flux_data()
+            M = self.get_molar_mass()
+            A_ck = self.get_crack_area()
+            n_ck = j_ck * 1e-6 / M * 3600 * A_ck
+        # interpolation function
+        func = interp1d(t, n_ck, bounds_error=False, fill_value=n_ck[-1])
+        self.n_ck = func
+        return
+
+    def get_entry_rate(self):
+        return self.n_ck
+
+    def set_material_volume(self):
+        material = self.get_material()
+        A_room = self.get_room_area()
+        penetration_depth = self.get_penetration_depth(material)
+        self.V_mat = A_room * penetration_depth
+        return
+
+    def get_material_volume(self):
+        return self.V_mat
+
+    def get_penetration_depth(self, material):
+        material = self.get_material()
+        # depth to which contaminant has been adsorbed/penetrated into the material
+        penetration_depth = {'cinderblock': 5e-3, 'wood': 1e-3,
+                             'drywall': 1e-2, 'carpet': 1e-2, 'paper': 1e-4}
+        return penetration_depth[material]
+
+    def reaction(self, c_in, c_star, k1, k2):
+        return k1 * c_star - k2 * c_in
+
+    def set_reaction_constants(self, k1, k2, K):
+        self.k1 = k1
+        self.k2 = k2
+        self.K = K
+        return
+
+    def get_reaction_constants(self):
+        return self.k1, self.k2, self.K
+
+    def cstr(self, t, u):
+
+        # gets parameters
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+        V_mat = self.get_material_volume()
+        k1, k2, K = self.get_reaction_constants()
+
+        # loads variables
+        c_in = u[0]
+        c_star = u[1]
+
+        # assigns reaction and entry rate functions
+        r = self.reaction(c_in, c_star, k1, k2)
+        n = self.get_entry_rate()
+
+        # odes
+        dc_in_dt = n(t) / V - Ae * c_in + r * V_mat / V
+        dc_star_dt = -r
+
+        return [dc_in_dt, dc_star_dt]
+
+    def cstr_no_rxn(self, t, u):
+
+        # gets parameters
+        Ae = self.get_air_exchange_rate()
+        V = self.get_building_volume()
+
+        # loads variable
+        c_in = u
+
+        # assigns entry rate function
+        n = self.get_entry_rate()
+
+        # ode
+        dc_in_dt = n(t) / V - Ae * c_in
+        return dc_in_dt
+
+    def solve_cstr(self):
+        t = self.get_time_data()
+        c0_in = self.get_initial_concentration()
+
+        if self.get_material() == None:
+            r = solve_ivp(self.cstr_no_rxn, t_span=(
+                t[0], t[-1]), y0=[c0_in], method='Radau', t_eval=t, max_step=0.1)
+            t, c, c_star = r['t'], r['y'][0], np.repeat(0, len(r['y'][0]))
+
+            return t, c, c_star, np.repeat(0, len(t))
+        else:
+            k1, k2, K = self.get_reaction_constants()
+            c0 = [c0_in, c0_in / K]
+            r = solve_ivp(self.cstr, t_span=(t[0], t[-1]), y0=c0, method='Radau',
+                          t_eval=t, max_step=0.1)
+            t, c, c_star = r['t'], r['y'][0], r['y'][1]
+            rxn = self.reaction(c, c_star, k1, k2)
+            return t, c, c_star, rxn
+
+    def get_dataframe(self):
+        df = self.get_data()
+        t, c, c_star, rxn = self.solve_cstr()
+        M = self.get_molar_mass()
+        c_gw = self.get_groudwater_concentration()
+        df['c_in'] = c * M * 1e6 # ug/m^3
+        df['c_mat'] = c_star * M * 1e6 # ug/m^3
+        df['alpha'] = df['c_in']/c_gw
+        df['rxn'] = rxn * M * 1e6 # ug/hr
+        return df
 
 
-#Season()
-#Snow()
-#AC()
-#Heating()
-#OutdoorTemp()
-#Correlations()
-#DiurnalTemp()
-#TempCorrelation()
-#TimePlot()
-#SoilTemp()
-#BuildingSides()
-TempPressure()
+class Analysis:
+    def get_kinetics_data(self):
+        materials = Material('cinderblock').get_materials()
+        k1s, k2s, Ks = [], [], []
+
+        for material in materials:
+            kinetics = Kinetics(
+                '../data/adsorption_kinetics.csv', material=material)
+            k1, k2, K = kinetics.get_reaction_constants()
+            k1s.append(k1)
+            k2s.append(k2)
+            Ks.append(K)
+
+        data = pd.DataFrame(index=materials, data={
+                            'k1': k1s, 'k2': k2s, 'K': Ks})
+        return data
+
+    def generate_indoor_material_data(self, zero_entry_rate=False):
+        materials = Material('cinderblock').get_materials()[0:-1]
+        materials.append('none')
+        dfs = []
+
+        for material in materials:
+            indoor = IndoorSource(
+                '../data/simulation/CPM_cycle_final.csv', material=material, zero_entry_rate=zero_entry_rate)
+            if material != 'none':
+                rxn = Kinetics(
+                    '../data/adsorption_kinetics.csv', material=material)
+                k1, k2, K = rxn.get_reaction_constants()
+                indoor.set_reaction_constants(k1, k2, K)
+                df = indoor.get_dataframe()
+            else:
+                df = indoor.get_dataframe()
+            df.sort_values(by='time', inplace=True)
+            df.reset_index(inplace=True, drop=True)
+            df['material'] = np.repeat(material, len(df))
+            dfs.append(df)
+
+        df = pd.concat(dfs, axis=0, sort=False)
+        return df
+
+    def get_indoor_material_data(self,file='../data/simulation/indoor_material.csv'):
+        #try:
+            #df = pd.read_csv(file)
+        #except:
+        df = self.generate_indoor_material_data()
+        df.to_csv(file,index=False)
+        return df.set_index(['material', 'time'])
+
+    def get_soil_sorption_data(self):
+        data = COMSOL('../data/simulation/transient_parametric_sweep.csv')
+        df = data.get_data()
+        return df.set_index(['K_ads', 'time'])
+
+    def get_steady_state_data(self):
+        data = COMSOL(file='../data/simulation/parametric_sweep_final.csv').get_data()
+        data['soil'].replace([1,2], ['Sandy Loam', 'Sand'], inplace=True)
+
+        return data.set_index(['soil','K_ads', 'p_in'])
+
+
+    def get_indoor_zero_entry_material_data(self,file='../data/simulation/indoor_material_zero_entry_rate.csv'):
+        #try:
+            #df = pd.read_csv(file)
+        #except:
+        df = self.generate_indoor_material_data(zero_entry_rate=True)
+        df.to_csv(file,index=False)
+        return df.set_index(['material', 'time'])
+
+
+    def get_time_to_equilibrium_data(self):
+
+        data = COMSOL(file='../data/simulation/time_to_equilibrium_final.csv').get_data()
+        data['soil'] = np.repeat('Sandy Loam', len(data))
+        sand_data = COMSOL(file='../data/simulation/sand_time_to_equilibrium_final.csv').get_data()
+        sand_data['soil'] = np.repeat('Sand', len(sand_data))
+
+        df = pd.concat([data, sand_data], axis=0, sort=False)
+
+        df['p_cycle'].replace([2, 3], ['Depressurization', 'Overpressurization'], inplace=True)
+        return df.set_index(['soil','K_ads','p_cycle', 'time'])
