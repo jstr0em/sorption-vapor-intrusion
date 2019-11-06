@@ -10,7 +10,7 @@ def indoor_adsorption():
     analysis = Analysis()
     df = analysis.get_indoor_material_data()
     kin = analysis.get_kinetics_data()
-
+    print(kin.sort_values(by='K',ascending=False))
     materials = list(kin.sort_values(by='K',ascending=False).index)
     materials.insert(0, 'none')
     materials.remove('soil')
@@ -241,7 +241,7 @@ def time_to_equilibrium():
 #soil_adsorption()
 
 # story
-path = '../'
+path = '../figures/'
 sorption_fit()
 plt.savefig(path+'sorption_fit.pdf')
 time_to_equilibrium()
