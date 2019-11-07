@@ -1,6 +1,6 @@
 \section{Methods}\label{sec:methods}
 
-\subsection{Experimental Setup}\label{sec:experiment}
+\subsection{Experimental Setup}\label{sec:experimental_method}
 
 The TCE  dynamic sorption process of different building materials were determined by use of a method schematically shown in Figure \ref{fig:js_sx_setup}.
 This method involved a selected material contained in an adsorption column through which TCE-containing gas was passed, and subsequent thermal desorption and measurement of the total amount of adsorption.
@@ -98,7 +98,7 @@ $\kappa$ is the saturated permeability;
 $\mu$ is the fluid viscosity; and $p$ is the fluid pressure.
 We assume that the contaminant vapors are so dilute that the gas flow properties can be taken to be those of air, and specifically at 20 \degree C and all the transport properties may be found in Table \ref{tbl:model}.\par
 
-\paragraph{Boundary Conditions}\label{par:darcy_bc}
+\paragraph{Boundary Conditions}
 
 To solve \eqref{eq:darcy} we assign the atmosphere boundary (see Figure \ref{fig:model}) to be at reference pressure and act as a gauge, i.e. zero pressure.
 The foundation crack boundary is assigned the indoor-outdoor pressure difference value.
@@ -110,7 +110,7 @@ Remaining boundaries are no-flow boundary conditions.
 \end{align}
 Here $\vec{n}$ and $\vec{u}$ are the boundary normal and gas velocity vectors.
 
-\paragraph{Initial Conditions}\label{darcy_ic}
+\paragraph{Initial Conditions}
 
 For steady-state problems, the initial conditions don't matter, but is simply zero for the entire domain.
 When solving transient, the initial conditions are given by the steady-state solution.\par
@@ -127,11 +127,12 @@ $K_H$ is the dimensionless Henry's Law constant.\par
 
 In this work, we consider sorption between the soil and vapor phases, as a function of the water contaminant concentration, through linear sorption \eqref{eq:linear_sorption}.
 \begin{equation}\label{eq:linear_sorption}
-  c_s = \rho_b c_g = \frac{\rho}{1-\theta_t} K_H c_w
+  c_s = K_\mathrm{ads} \rho_b c_g = K_\mathrm{ads} \frac{\rho}{1-\theta_t} K_H c_w
 \end{equation}
 Here the $c_s$ is the solid phase concentration in $\mathrm{mol/kg}$;
-$\rho_b$ is the bulk density of the soil $\mathrm{kg/m^3}$, which is given by the density $\rho$ and the total soil porosity $\theta_t$.
-Using these two relations we can express the total contaminant concentration in terms of the water contaminant concentration.\par
+$\rho_b$ is the bulk density of the soil $\mathrm{kg/m^3}$, which is given by the density $\rho$ and the total soil porosity $\theta_t$;
+$K_\mathrm{ads}$ is the sorption isotherm in $\mathrm{m^3/kg}$.
+Using Henry's Law and the linear isotherm we can express the total contaminant concentration in terms of the water contaminant concentration.\par
 
 Mass transport in the vadose zone is governed by diffusion and advection and is given by \eqref{eq:mass_transport}.
 \begin{equation}\label{eq:mass_transport}
@@ -183,7 +184,7 @@ Millington-Quirk developed \eqref{eq:millington-quirk} which describes the effec
 Where the porosity fractions are the water and gas phase tortuosity terms;
 $D_\mathrm{air}$ and $D_\mathrm{water}$ are the contaminant diffusion coefficient in air and water respectively in $\mathrm{m^2/s}$.\par
 
-\paragraph{Boundary Conditions}\label{par:mass_transport_bc}
+\paragraph{Boundary Conditions}
 
 A few boundary conditions are required to solve \eqref{eq:mass_transport}.
 In this model, the sole contaminant source is assumed to be the homogenously contaminated groundwater, which we assume to have a fixed concentration.
@@ -205,26 +206,27 @@ We assume that only contaminants in the gas phase enter the building, and dividi
 For a steady-state condition the initial conditions don't matter, but are set to be zero everywhere.
 For transient simulations in this work, the steady-state solution is always used as an initial condition.
 
-\subsubsection{Indoor Environment}
+\subsubsection{Indoor Environment}\label{sec:indoor_environment}
 
 The indoor air space is modeled as a continuously stirred tank reactor (CSTR) given by \eqref{eq:cstr}.
-Contaminants are assumed to only enter through the foundation crack, represented by $n_\mathrm{entry}$, which is calculated by integrating the contaminant flux over the foundation crack boundary.
+Contaminants are assumed to only enter through the foundation crack, represented by $n_\mathrm{ck}$, which is calculated by integrating the contaminant flux over the foundation crack boundary.
 The product of air exchange rate, which govern how many house volumes are exchanged with the outside per time unit, and indoor air contaminant concentration gives the contaminant exit rate.
 The sorption of contaminant is given by the sorption reaction term in \eqref{eq:sorption_rate} and the sorbed contaminant concentration is given by \eqref{eq:sorbed_concentration}.
 
 \begin{align}
-  V_\mathrm{bldg} \frac{\partial c_\mathrm{in}}{\partial t} &= n_\mathrm{entry} - A_e c_\mathrm{in} V_\mathrm{bldg} + r_\mathrm{sorb} V_\mathrm{mat}\label{eq:cstr} \\
+  V_\mathrm{bldg} \frac{\partial c_\mathrm{in}}{\partial t} &= n_\mathrm{ck} - A_e c_\mathrm{in} V_\mathrm{bldg} + r_\mathrm{sorb} V_\mathrm{mat}\label{eq:cstr} \\
   V_\mathrm{mat} \frac{\partial c_\mathrm{sorb}}{\partial t} &= -r_\mathrm{sorb} V_\mathrm{mat}\label{eq:sorbed_concentration} \\
-  r_\mathrm{sorb} &= k_1 c_\mathrm{sorb} - k_2 c_\mathrm{in}\label{eq:sorption_rate}
+  r_\mathrm{sorb} &= k_1 c_\mathrm{sorb} - k_2 c_\mathrm{in}\label{eq:sorption_rate}\\
+  n_\mathrm{ck} &= \int_{A_{ck}} j_{ck} dA
 \end{align}
 
 Here $V_\mathrm{bldg}$ and $V_\mathrm{mat}$ are the indoor control volume and volume of indoor material in $\mathrm{m^3}$;
 $c_\mathrm{in}$ and $c_\mathrm{sorb}$ are the indoor and sorbed (onto the indoor material) contaminant concentrations in $\mathrm{mol/m^3}$;
-$n_\mathrm{entry}$ is the contaminant entry rate in $\mathrm{mol/s}$;
+$n_\mathrm{entry}$ is the contaminant entry rate in $\mathrm{mol/s}$, which is calculated by integrating the contaminant flux $j_{ck}$ over the foundation crack area;
 $r_\mathrm{sorb}$ sorption rate in $\mathrm{mol/(m^3 \cdot s)}$;
 $k_1$ and $k_2$ are desorption and sorption reaction constants in $\mathrm{1/s}$.\par % TODO: Make sure this is right.
 
-\paragraph{Fitting Kinetic Parameters}\label{par:fitting}
+\paragraph{Fitting Kinetic Parameters}
 
 To calculate the indoor sorption rate we need $k_1$ and $k_2$.
 These values are found by solving \eqref{eq:sorption_rate} numerically and then finding the best $k_1$ and $k_2$ by fitting them to the experimental data via least square.
