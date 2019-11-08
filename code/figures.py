@@ -185,7 +185,7 @@ def time_to_equilibrium():
 
     for cycle in cycles:
         # setting up figure
-        fig = plt.figure(dpi=300, constrained_layout=True, figsize=(10,5))
+        fig = plt.figure(dpi=300, constrained_layout=True, figsize=(10,6))
         gs = GridSpec(2,2, figure=fig)
 
         ax1 = fig.add_subplot(gs[0,:])
@@ -229,10 +229,13 @@ def time_to_equilibrium():
 
         ax1.ticklabel_format(axis='y', style='sci') # TODO: Figure out why this doesn't work
         handles, labels = ax2.get_legend_handles_labels()
-        ax1.legend([],[],loc='center left',bbox_to_anchor=(1.60,1))
-        fig.legend(handles, labels, title='Soil & sorptivity',loc='center left', bbox_to_anchor=(0.72,0.5))
+        ax1.legend(handles, labels, title='Soil & sorptivity', loc='upper right', frameon=True)
+        #ax1.legend([],[],loc='center left',bbox_to_anchor=(1.60,1))
+        #fig.legend(handles, labels, title='Soil & sorptivity',loc='center left', bbox_to_anchor=(0.72,0.5))
 
         fig.suptitle(titles[cycle])
+
+        plt.savefig('../figures/equilibrium_retardation_%s.pdf' % cycle.lower())
 
     return
 
@@ -245,7 +248,9 @@ path = '../figures/'
 sorption_fit()
 plt.savefig(path+'sorption_fit.pdf')
 time_to_equilibrium()
-plt.savefig(path+'equilibrium_retardation.pdf')
+
+
+
 indoor_adsorption()
 plt.savefig(path+'sorption_indoor_cycle.pdf')
 indoor_adsorption_zero_entry()
