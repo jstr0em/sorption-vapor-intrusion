@@ -60,15 +60,17 @@ At the start of the simulation, the building building is 1) further depressurize
   \text{Depressurization}: \; \Delta p_\mathrm{in/out} &= \begin{cases}
     -5, \; &t = 0 \; \mathrm{(hr)} \\
     -15, \; &0 < t \leq 72 \; \mathrm{(hr)}
-\end{cases}\\
+\end{cases}\label{eq:equilibrium_depressurization}\\
 \text{Overpressurzation}: \; \Delta p_\mathrm{in/out} &= \begin{cases}
   -5, \; &t = 0 \; \mathrm{(hr)} \\
   15, \; &0 < t \leq 72 \; \mathrm{(hr)}
-\end{cases}
+\end{cases}\label{eq:equilibrium_overpressurization}
 \end{align}
 For each of these cases, the simulation is run using two different soil types - sand and sandy loam.
 Sand is assumed here to not sorb any TCE, while for sandy loam a range of sorption isotherms are used.
-These range from no sorption ($K_\mathrm{ads} = 0 \; \mathrm{(m^3/kg)}$) to the experimentally determined sorption isotherm ($K_\mathrm{ads} = 5.28 \; \mathrm{(m^3/kg)}$).\par
+These range from no sorption ($K_\mathrm{ads} = 0 \; \mathrm{(m^3/kg)}$) to the experimentally determined sorption isotherm ($K_\mathrm{ads} = 5.28 \; \mathrm{(m^3/kg)}$) in intervals multiplicative by $10^{-2}$. With the experimentally determined isotherm, we see that the ratio between sorbed concentration and soil-gas phase concentration is 7708, i.e. there is a much larger amount of sorbed contaminant.
+When $K_\mathrm{ads} = 5.28 \cdot 10^{-4} \; \mathrm{(m^3/kg)}$ this ratio is roughly unity (0.77), which is good to keep in mind in the following discussion. % TODO: Make sure you change this value if you rerun the simulation later with a different H
+These ranges of values can be used both to represent a soil that has a smaller sorptive capacity or a situation where the sorbed and gas phase has not quite reached equilibrium.\par
 
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{equilibrium_retardation_depressurization.pdf}
@@ -76,6 +78,43 @@ These range from no sorption ($K_\mathrm{ads} = 0 \; \mathrm{(m^3/kg)}$) to the 
   \label{fig:equilibrium_depressurization}
 \end{figure}
 
+In the top panel of Figure \ref{fig:equilibrium_depressurization}, the indoor air contaminant concentration as the simulated building is undergoing the pressurization in \eqref{eq:equilibrium_depressurization} case.
+Here we can see that for the case when the surrounding soil consists of sand, the indoor concentration increases rapidly as the building is further pressurized.
+The rate of increase decreases significantly for the sandy loam cases, and progressively retards are the sorbed mass increases ($K_\mathrm{ads}$ increases).\par
+
+The bottom left panel shows how far away the indoor air concentration (as attentuation factor) for each case is from reaching equilibrium.
+At the start of the simulation, the building starts with an attenuation of $\alpha_0$, which is the steady-state concentration when the building is pressurized with -5 Pa.
+As the building is further depressurized to -15 Pa, the indoor air concentration will approach a new equilibrium state $\alpha_{eq}$ (the result of which is from a steady-state simulation at that pressurization).
+By plotting $\frac{|\alpha-\alpha_0|}{|\alpha_{eq}-\alpha_0|}$ we can easily see how far away we are from the new equilibrium state, and a value of 0 represents that we are at the initial concentration, i.e. $\alpha = \alpha_0$, and a value of 1 represents $\alpha = \alpha_{eq}$.\par
+
+This sort of analysis is applied to the bottom right panel as well, but instead of the indoor air concentration (as attentuation factor), we consider the average soil-gas concentration in a 5 cm diameter cylinder that envelop the entire perimeter crack.
+The choice of 5 cm is arbitrary, but helps illustrate what happens with the near-foundation-crack soil-gas concentration, changes in which allow us to better understand how the contaminant is transported into the building from the soil.
+The same could be done for the soil-gas velocity of course, but the rate of soil-gas velocity change is virtually the same for all of these cases, and reaches the new equilibrium velocity very quickly (much faster than the concentration) and is thus omitted from the figure.\par
+
+Before discussing the role of sorption here, we can first compare the non-sorbing sand and sandy loam cases.
+Due to the higher permeability and lower moisture content, sand is significantly more permeable to gas flow than sandy loam (see Table \ref{tbl:model} for permeability values).
+Consequently the advective transport through the foundation crack is much more significant, which is indicated by a Péclet number of around 4 versus 0.2 at a -15 Pa pressurization for sand and sandy loam respectively.\par
+
+Due to the advection dominated transport mechanism in the sand case, the indoor air concentrations are temporarily elevated above the equilibrium concentration at -15 Pa, while the soil-gas concentration moves further away from equilibrium.
+(Note that the absolute distance from equilibrium is plotted in Figure \ref{fig:equilibrium_depressurization} which is why at first glance one might think that the soil-gas concentration is two order of magnitude higher initially, but actually is two order of magnitude lower.)
+This phenomena occurs because initially more contaminants are drawn into the building from the near crack area than can be resupplied, temporarily depleting the local soil-gas contaminant concentration.\par
+
+One can notice that many of the sandy loam lines overlap, and start diverging from each other when $K_\mathrm{ads} = 5.28 \cdot 10^{-4} \; \mathrm{(m^3/kg)}$, at the point where the ratio of sorbed and soil-gas concentration are roughly equal.
+We see that this divergence occurs simultaneously in the indoor air and soil-gas contaminant concentration.
+However, since the indoor air concentration depend on the soil-gas concentration, we know that this is where the relevant difference is.\par
+
+The simple reason for this is that it is at this threshold the sorptive contribution to the retardation factor \eqref{eq:retardation_factor} starts to becomes larger than the other terms.
+\begin{equation}
+   \rho_b K_H K_\mathrm{ads} > \theta_w + \theta_g K_H
+\end{equation}
+Thus it is at this point that the contaminant transport in the soil starts to become retarded by sorption.
+The physical reason for this is that the partitioning between the various phases gives a residence time as the contaminant is transported.
+Under VI conditions, the values of $\theta_w + \theta_g K_H$ are bounded to relatively small values, while $K_\mathrm{ads}$ can vary by orders of magnitude, making sorption potentially a very significant retarder for soil transport.\par
+
+Figure \ref{fig:equilibrium_overpressurization} shows the same sort of analysis as in Figure \ref{fig:equilibrium_depressurization} but with the building pressurization following \eqref{eq:equilibrium_overpressurization}.
+The results here are more or less the same, with the notable exception that in the sand case, the final equilibrium concentration is not initially exceeded.
+As the building is overpressurized, the indoor contaminant are pushed out into the soil.
+Since the indoor air concentration is lower than the soil-gas concentration, this is entirely expected.\par
 
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{equilibrium_retardation_overpressurization.pdf}
@@ -83,6 +122,7 @@ These range from no sorption ($K_\mathrm{ads} = 0 \; \mathrm{(m^3/kg)}$) to the 
   \label{fig:equilibrium_overpressurization}
 \end{figure}
 
+% TODO: Some concluding remarks or keep this solely for the conclusion section?
 
 \subsection{Indoor Material Sorption And Dynamics}
 
