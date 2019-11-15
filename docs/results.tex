@@ -1,6 +1,6 @@
 \section{Results \& Discussion}\label{sec:results}
 
-\subsection{Fitting Sorption Parameters}
+\subsection{Fitting Sorption Parameters}\label{sec:results_sorption_fit}
 
 Using the numerical fitting scheme described in section \ref{sec:indoor_environment} with the sorption data from the method described in section \ref{sec:experimental_method}, the kinetic sorption parameters $k_1$ and $k_2$ are fitted.
 Figure \ref{fig:sorption_fit} shows the result of this fitting and the sorption data for three select materials - wood, Appling soil, and cinderblock concrete.
@@ -124,17 +124,56 @@ Since the indoor air concentration is lower than the soil-gas concentration, thi
 
 % TODO: Some concluding remarks or keep this solely for the conclusion section?
 
-\subsection{Indoor Material Sorption And Dynamics}
+\subsection{Indoor Material Sorption And Dynamics}\label{sec:results_indoor_sorption}
 
+We have now explored the effect that sorption has on contaminant mass transport in the sub-surface soil and seen its retarding effect.
+Now we turn to exploring the effect of sorption onto/from various indoor materials has on the indoor air contaminant concentration.
+(Here we assume that there is no soil sorption.)\par
+
+To study this we consider the basement (the indoor air space) and assume that the inside surfaces are entirely made up of one of the materials we studied in \ref{sec:results_sorption_fit}.
+We also assume that the material covering the indoor surfaces has a certain thickness or depth that the contaminants can penetrate - giving a certain volume or mass of sorbing material in the indoor.
+Table \ref{tbl:sorbed_material} shows the surface area, penetration depth, and volume of each material studied.
+While obviously some of these rooms are non-conventional and arbitrarily designed, i.e. you're unlikely to find a room with carpeted walls, floors, and ceiling, they do present some limiting cases of the potential effect of sorption onto/from these materials.\par
+
+% TODO: Do I want to include some more information/data here? Sorbed mass at t0?
+\begin{table}[htb!]
+  \centering
+  \begin{tabular}{l c c}
+    \toprule
+    Material & $d_\mathrm{p} \; \mathrm{(mm)}$ & $V_\mathrm{mat} \; \mathrm{(m^3)}$ \\
+    \hline
+    Cinderblock & 5 & 1.6 \\
+    Wood & 1 & 0.32 \\
+    Drywall & 10 & 3.2 \\
+    Carpet & 10 & 3.2 \\
+    Paper & 0.1 & 0.032 \\
+    \bottomrule
+  \end{tabular}
+  \caption{The assumed contaminant penetration depth and subsequent volume of the sorbing indoor materials. The material surface area is assumed to be the same, and each material completely cover the surfaces of a 10x10x3 meter room.}
+  \label{tbl:sorbed_material}
+\end{table}
+
+The modeled building then undergoes a pressurization cycle, where at start of the simulation it is depressurized at -5 Pa and at steady-state.
+The building is then sequentially depressurized to -15 Pa, then pressurized to 15 Pa, and finally again depressurized to -5 Pa.
+For each sequence, the new pressurization is maintained for 24 hours.
+This pressurization cycle may be seen in the top left panel of \ref{fig:indoor_sorption_cycle}.
+The choice of pressurization cycle is somewhat arbitrary, but ours can be used to represent limiting cases of natural pressurization variation, or artificially induced pressurization.
+Figure \ref{fig:indoor_sorption_cycle} shows the result of these simulations.\par
+
+First we consider the reference case - where there is no sorbing indoor materials present.
+(The blue line is the reference case, which may be difficult to see as the wood and )
+Here we see that as the building is depressurized, the indoor air contaminant concentration increases quickly in response to the pressurization change.
 
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{sorption_indoor_cycle.pdf}
-  \caption{}
+  \caption{
+  Comparison of how sorption onto/from various indoor materials affect the indoor air contaminant concentration (bottom) of a building that undergoes a pressurization cycle (top left). The rate of de- and sorption for each considered material during the cycle are also shown (top right) and is governed by \eqref{eq:sorption_rate}.}
   \label{fig:indoor_sorption_cycle}
 \end{figure}
 
 
-\subsection{Indoor Material Sorption And Mitigation}
+
+\subsection{Indoor Material Sorption And Mitigation}\label{sec:results_indoor_mitigation}
 
 
 \begin{figure}[!htb]
