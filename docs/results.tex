@@ -160,10 +160,13 @@ This pressurization cycle may be seen in the top left panel of \ref{fig:indoor_s
 The choice of pressurization cycle is somewhat arbitrary, but ours can be used to represent limiting cases of natural pressurization variation, or artificially induced pressurization.
 Figure \ref{fig:indoor_sorption_cycle} shows the result of these simulations.\par
 
+The change in indoor air contaminant concentration over this pressurization cycle is shown in the bottom panel of Figure \ref{fig:indoor_sorption_cycle}.
 First we consider the reference case - where there is no sorbing indoor materials present.
-(The blue line is the reference case, which may be difficult to see as the wood and )
-Here we see that as the building is depressurized, the indoor air contaminant concentration increases quickly in response to the pressurization change.
+(The blue line is the reference case, which may be difficult to see as the wood and carpet lines overlap.)
+Here we see that as the building is depressurized, the indoor air contaminant concentration increases quickly in response to the pressurization change, and is approaching an equilibrium.\par
 
+% TODO: Add explanation of what - and + mean in the sorption panel
+% TODO: Plot the sorption rate r normalised to the entry rate n_ck? Should be ~1 when materials becomes saturated. Nice way to non-dimensionalize this too. Maybe as second axis plot on the top right panel?
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{sorption_indoor_cycle.pdf}
   \caption{
@@ -171,9 +174,50 @@ Here we see that as the building is depressurized, the indoor air contaminant co
   \label{fig:indoor_sorption_cycle}
 \end{figure}
 
+By observation we can see that the presence of the various studied building materials in the indoor environment has a very different effect on the change in indoor air contaminant concentration.
+The presence of wood and carpet has close to no effect on the indoor air concentration.
+While cinderblock has a very significant effect, preventing almost any change in indoor concentration.
+Drywall and carpet is in the middle significantly delays the rate of change in the indoor concentration, but for each 24 hour cycle, roughly the same indoor concentration is reached as the reference case.\par
 
+The disparity of these result is explained by the the top right panel of Figure \ref{fig:indoor_sorption_cycle}.
+Here the de- and sorption rates in $\mathrm{\mu g/hr}$ for each considered indoor material is shown.
+A positive and negative value here indicate that contaminant is desorbed respectively sorbed to and from the material.
+To understand this figure, it is useful to refer back to Table \ref{tbl:sorption_fit} which show the sorption and desorption rate constant $k_1$ and $k_2$ respectively, and the sorption equilibrium constant $K$ (a smaller value indicate a larger sorptive capacity).\par
+
+First we consider to the depressurization part of the cycle (1-25 hours).
+(Here see that the reference case has no sorption at all, by definition.)
+And similar to the indoor concentration panel, we see that the wood, drywall, and carpet cases overlap.
+This is explained by these materials have similar sorptive capacities ($K$) and sorptive rates ($k_2$).
+Paper by contrast has a similar shape to the three previously mentioned, while the magnitude is significantly larger.
+This is because the $K$ value for paper is one order of magnitude larger, indicating that wood, drywall, and carpet saturate with contaminant vapors over the time period, while paper does not.
+Cinderblock has a further order of magnitude larger $K$ value, thus is even further away from being saturated, which explains the even faster sorption rate.\par
+
+Next we consider the overpressurzation period (25-49 hours).
+Again we see here that wood, drywall, and carpet behave the similarly for the same reasons as before, i.e. the desorption rate constants $k_1$ and sorption equilibrium constants $K$ are similar.
+This means that these reach the new sorbed contaminant saturation at roughly the same time.\par
+
+Here it is important to note that due to the diffusion dominated transport through the foundation crack, even though the building is overpressurized, there is substantial contaminant entry.
+And because the sole contaminant source is the modeled contaminated groundwater, the sorbed equilibrium is relative to this entry rate.\par
+
+Paper and cinderblock initially behave very similarly during the overpressurization period and desorb contaminants quickly.
+However, paper reaches its saturation limit after a relatively short time, while cinderblock has not even at the end of the overpressurzation cycle.
+Since the desorption rate constants $k_2$ are relatively similar for the materials, thus this disparity is primarily due to the different sorption equilibrium constants $K$.\par
+
+Lastly, we consider the final period where the pressurization goes back to its initial state (49-72 hrs).
+Here we see that the reference case does not quite return to the initial indoor concentration.
+Thus the contaminant entry rate has not equilibrated yet, due to the soil contaminant concentration has not done so either.
+Like in the previous analysis we again see that the wood, drywall, and carpet cases don't differ from the reference.
+The paper case is slightly more different, but for the same reasons that have already been discused.
+Cinderblock is unique here though, as we clearly see that it is releasing contaminants, due to the previous change in contaminant concentration has been so significantly retarded.\par
+
+
+From this simulation work we can see how varied the effect of sorbing indoor materials are.
+Most of the tested materials only have a moderate effect on the indoor air contaminant concentration dynamics, with the notable exception of cinderblock, which effectively enforces as pseudo-steady-state.
+However we also see from the analysis of the sorption dynamics that the de- and sorption rate constants $k_1$ and $k_2$ are less important than the sorptive capacity $K$ of the material.\par
 
 \subsection{Indoor Material Sorption And Mitigation}\label{sec:results_indoor_mitigation}
+
+Another important scenario where indoor material sorption may be significant is VI mitigation.
 
 
 \begin{figure}[!htb]
