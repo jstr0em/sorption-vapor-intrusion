@@ -153,16 +153,28 @@ def indoor_adsorption_zero_entry():
     # indoor material analysis
     # combo plot
     #materials = list(df.index.levels[0])
-    fig, ax = plt.subplots(dpi=300)
+    print(df)
+    # setting up figure
+    fig = plt.figure(dpi=300, constrained_layout=True)
+    gs = GridSpec(2,2, figure=fig)
+
+    ax1 = fig.add_subplot(gs[0,0])
+    ax2 = fig.add_subplot(gs[0,1])
+    ax3 = fig.add_subplot(gs[1,0])
+    ax4 = fig.add_subplot(gs[1,1])
+
+
     for i, material in enumerate(materials):
         color = colors[i]
         df_now = df.loc[material]
-        df_now.plot(y='alpha',ax=ax, label=material.title(), logy=True, color=color)
+        df_now.plot(y='c_in',ax=ax1, label=material.title(), logy=True, color=color)
+        df_now.plot(y='sorption_balance',ax=ax2, legend=False,logy=True, color=color)
+        df_now.plot(y='rxn',ax=ax3, legend=False,  logy=True, color=color)
 
     #ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns,cellLoc = 'center', rowLoc = 'center', loc='bottom')
 
-    ax.legend(title='Material')
-    ax.set(xlabel='Time (hr)',ylabel='$\\alpha$', title='Attenuation factor from groundwater following elimination of contaminant entry')
+    ax1.legend(title='Material')
+    ax1.set(xlabel='Time (hr)',ylabel='$\\alpha$', title='Attenuation factor from groundwater following elimination of contaminant entry')
 
     plt.tight_layout()
     return
@@ -245,16 +257,16 @@ def time_to_equilibrium():
 
 # story
 path = '../figures/'
-sorption_fit()
-plt.savefig(path+'sorption_fit.pdf')
-time_to_equilibrium()
+#sorption_fit()
+#plt.savefig(path+'sorption_fit.pdf')
+#time_to_equilibrium()
 
 
 
-indoor_adsorption()
-plt.savefig(path+'sorption_indoor_cycle.pdf')
+#indoor_adsorption()
+#plt.savefig(path+'sorption_indoor_cycle.pdf')
 indoor_adsorption_zero_entry()
-plt.savefig(path+'sorption_mitigation.pdf')
+#plt.savefig(path+'sorption_mitigation.pdf')
 
 
 plt.show()
