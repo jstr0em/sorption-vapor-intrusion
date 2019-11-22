@@ -200,7 +200,7 @@ Here it is important to note that due to the diffusion dominated transport throu
 And because the sole contaminant source is the modeled contaminated groundwater, the sorbed equilibrium is relative to this entry rate.\par
 
 Paper and cinderblock initially behave very similarly during the overpressurization period and desorb contaminants quickly.
-However, paper reaches its saturation limit after a relatively short time, while cinderblock has not even at the end of the overpressurzation cycle.
+However, paper reaches its saturation limit after a relatively short time, while cinderblock has not even at the end of the overpressurization cycle.
 Since the desorption rate constants $k_2$ are relatively similar for the materials, thus this disparity is primarily due to the different sorption equilibrium constants $K$.\par
 
 Lastly, we consider the final period where the pressurization goes back to its initial state (49-72 hrs).
@@ -217,8 +217,15 @@ However we also see from the analysis of the sorption dynamics that the de- and 
 
 \subsection{Indoor Material Sorption And Mitigation}\label{sec:results_indoor_mitigation}
 
-Another important scenario where indoor material sorption may be significant is VI mitigation.
+The work done by us and others have shown the large sorptive capacities of various common materials.
+The desorption of the sorbed contaminants may have significant impact on the efficacy of various mitigation systems.
+To investigate this we turn to our model and consider a scenario where initially the modeled building is depressurized with -5 Pa and at the start of the simulation some perfect mitigation scheme is  turned on and the contaminant entry $n_\mathrm{entry}$ in \eqref{eq:indoor_environment} goes to zero.
+We also assume that for each case, the indoor environment contains the same amount of indoor material as described in section \ref{sec:results_indoor_sorption}.
+The air exchange rate is assumed to remain a constant 0.5 per hour for the entire 72 hour simulation time.\par % TODO: Update this time if you run a longer simulation later.
 
+The decrease in indoor air concentration (as attenuation factor $\alpha$) for each simulated case is seen in Figure \ref{fig:sorption_mitigation}.
+As excepted, when there is no sorbing indoor materials, i.e. our reference case, the indoor concentration decreases log-linearily.
+We can also see that the contaminant desorption from the materials maintain a higher indoor air concentration relative to reference, with cinderblock again shown to have the great impact.\par
 
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{sorption_mitigation.pdf}
