@@ -4,17 +4,17 @@
 
 % new version
 To study the dynamic sorption of TCE onto the selected building materials, we use a two-step process - one for sorption and one for desorption.
-A graphic representation of this system is shown in Figure \ref{fig:js_sx_setup}.
+A graphic representation of this system is shown in Figure \ref{fig:js_sx_setup}.\par
 
 In the sorption process a 7.5 by 1.27 cm stainless steel column is filled with material.
 (Before filling the column, the materials had to be ground-up using a coffee grinder, except soil.
 We use 2.0 g of drywall, and 1.0 g of the other materials.)
 Using flow controllers, TCE is diluted in nitrogen gas to 1.12 $\mathrm{ppb_v}$ and flowed through the column at a rate of 60 mL per minute, for a pre-selected time period.
-After the material has sorbed for the selected time, the column is detached and attached to the desorption system.
+After the material has sorbed for the selected time, the column is detached and attached to the desorption system.\par
 
 In the desorption system, the column is heated to 100 \degree C and pure nitrogen gas is flowed through the previous outlet side of the column - carrying the desorbed contaminant with it.
 The now contaminated nitrogen gas is then passed through a long circular pipe, allowing the gas to cool to room temperature, and flowing into a carbon-filled stainless steel sorption column.
-The sorption column is then desorbed into a gas-chromatograph fitted with a electron capture device according to the EPA TO-17 standard.
+The sorption column is then desorbed into a gas-chromatograph fitted with a electron capture device according to the EPA TO-17 standard.\par
 
 \begin{figure}
   \includegraphics[width=\textwidth]{JS_SX_experiment_setup.png}
@@ -24,34 +24,30 @@ The sorption column is then desorbed into a gas-chromatograph fitted with a elec
 
 \subsection{Numerical Model}\label{sec:model}
 
-To investigate the role of sorption in VI, we consider a model of a simple VI scenario.
-Here we consider a house with a 10 by 10 m footprint, with the foundation bottom located 1 m below ground surface (bgs).
+To investigate the role of sorption in VI, we consider VI impacted house with a 10 by 10 m footprint, with the foundation bottom located 1 m below ground surface (bgs).
 The sole contaminant source is an uniformly TCE contaminated groundwater located 4 bgs, and the soil surrounding the house is assumed to homogenous and of a singular type.
 All contaminant vapors are assumed to enter the house through breaches in the foundation, modeled as a 1 cm wide crack that runs along the perimeter of the house.
-Finally we assume that sorption processes can occur both in the soil matrix and in the indoor environment (on various indoor materials).\par
+Finally we assume that sorption processes can occur both in the soil matrix and in the indoor environment (on various indoor materials).
+Figure \ref{fig:model} shows a schematic of this model.\par
 
 Modeling this scenario requires us to simulate a couple of physics, many of which depend and interact with each other.
-The governing equations and the physics they govern are:
-\begin{enumerate}
-  \item van Genuchten retention model - soil moisture.
-  \item Darcy's Law - air flow in the porous media.
-  \item Transport equation - contaminant transport in porous media.
-  \item Continuously stirred tank reactor (CSTR) - contaminant concentration in the indoor environment.
-\end{enumerate}
-These physics are implemented in COMSOL Multiphysics, a commercial finite-element method package, which is used to solve our model.
+The soil contains a variable moisture content and is modeled using van Genuchten's retention model\cite{van_genuchten_closed-form_1980}, which determines the effective permeability of the soil matrix and the contaminant effective diffusivity.
+Darcy's Law models the gas velocity in the soil matrix, which is used to determine the advective mass transport.
+Contaminant mass transport is assumed to occur through advection and diffusion, and distributed between gas, water, and sorbed onto solid phases.
+The indoor air space is modeled using as a continuously stirred tank reactor (CSTR), where the reaction term determines the sorption onto/from the indoor materials.
 It is important to note that the indoor environment is implicitly modeled, but instead only given by the CSTR equation; the soil domain is explicitly modeled.\par
 
 % TODO: Make some nice figure
 \begin{figure}
   %\includegraphics{}
-  \caption{The vapor intrusion model}
+  \caption{The vapor intrusion model. Not yet done.}
   \label{fig:model}
 \end{figure}
 
 \subsubsection{Vadose Zone Moisture Content}
 
 Since the contaminant transport occurs through three-phased the vadose zone, it is important that we correctly account for soil moisture content and its effect on advective and diffusive transport.
-In this modeled scenario, we assume that the soil moisture is at steady-state and does not change, and thus the soil moisture content is given by the retention model developed by van Genuchten.\par
+In this modeled scenario, we assume that the soil moisture is at steady-state and does not change, and thus the soil moisture content is given by the retention model developed by van Genuchten\cite{van_genuchten_closed-form_1980}.\par
 
 The van Genuchten retention model gives the soil water saturation as a function of elevation above groundwater.
 In turn this gives the water and gas filled porosities, and the relative permeability of the soil matrix.
@@ -85,8 +81,9 @@ $k_r$ is the relative permeability of water, which modifies the saturated permea
 The gas flow in the vadose zone is governed by a modified version of Darcy's Law.
 Originally, Darcy's Law was developed to describe flow in saturated porous media, but since we're interested in flow in unsaturated media, modification is necessary.
 An effective permeability that depends on the relative permeability from van Genuchten is introduced to allow for correct flow profiles in unsaturated porous media.\par
+% TODO: Find a good reference for DL. Maybe one of my books?
 
-The vapor flow governing equation is given by
+The vapor flow continuity governing equation is given by
 \begin{equation}\label{eq:darcy}
   \frac{\partial}{\partial t} (\rho \theta_s) + \nabla \cdot \rho \Big( -\frac{(1-k_r) \kappa}{\mu} \nabla p \Big) = 0
 \end{equation}
@@ -110,8 +107,8 @@ Here $\vec{n}$ and $\vec{u}$ are the boundary normal and gas velocity vectors.
 
 \paragraph{Initial Conditions}
 
-For steady-state problems, the initial conditions don't matter, but is simply zero for the entire domain.
-When solving transient, the initial conditions are given by the steady-state solution.\par
+For steady-state problems, the initial conditions do not influence the solution, but by necessity simply set to zero for the entire domain.
+Transient simulations however, use the initial conditions that are given by the steady-state solution.\par
 
 \subsubsection{Mass Transport In The Vadose Zone}\label{sec:mass_transport}
 
@@ -230,9 +227,8 @@ To calculate the indoor sorption rate we need $k_1$ and $k_2$.
 These values are found by solving \eqref{eq:sorption_rate} numerically and then finding the best $k_1$ and $k_2$ by fitting them to the experimental data via least square.
 We use Runge-Kutta method of order 5(4) as the numerical solve, which is implemented together with the least square method in the SciPy python package\cite{jones_scipy_2011}.
 
-
 % TODO: Create table of all the constants and values used
 \begin{table}
-  \caption{Transport properties and model parameters}
+  \caption{Transport properties and model parameters. To be completed.}
   \label{tbl:model}
 \end{table}
