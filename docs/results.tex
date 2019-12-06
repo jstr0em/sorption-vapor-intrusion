@@ -2,7 +2,7 @@
 
 \subsection{Fitting Sorption Parameters}\label{sec:results_sorption_fit}
 
-Using the numerical fitting scheme described in section \ref{sec:indoor_environment} with the sorption data from the method described in section \ref{sec:experimental_method}, the kinetic sorption parameters $k_1$ and $k_2$ are fitted.
+Using the numerical fitting scheme described in section \ref{sec:indoor_environment} with the sorption data from the method described in section \ref{sec:experimental_method}, the kinetic sorption parameters $k_1$ and $k_2$ are determined.
 Figure \ref{fig:sorption_fit} shows the result of this fitting and the sorption data for three select materials - wood, Appling soil, and cinderblock concrete.
 The $k_1$ and $k_2$ represent the rate at which TCE desorbs and sorbs respectively onto/from the material of interest.
 The equilibrium sorption constant is, using the formulation in \eqref{eq:sorption_rate}, given by
@@ -27,11 +27,12 @@ This is done by multiplying the inverse of $K$ isotherm with inverse of the soil
 % TODO: Shuai: Some thoughts or comments about these values? I.e. why is cinderblock so much larger?
 Table \ref{tbl:sorption_fit} shows the fitted parameters for the tested materials.
 Based on this these results we can see that cinderblock and soil have orders of magnitude larger sorption capacities than wood or drywall does.
-We can also see by the $k_2$ values that soil and cinderblock sorb quickly, much faster than a material with similar sorptive capacity such as paper.
-% Lots of "why is this?" here...
+We can also see by the $k_2$ values that soil and cinderblock sorb quickly, much faster than a material with similar sorptive capacity such as paper.\par
+\textit{Note: Here I envision some explanation/discussion on why there is a such a big difference in sorptive capacities. I've asked Shuai to write about this.}
 
+% TODO: Add the relative sorbed mass compared to air. I.e. cinderblock has ~ 7800 more mass for the same volume.
 \begin{table}[htb!]
-  \caption{Fitted kinetic sorption parameters based on sorption experiment data.}
+  \caption{Fitted kinetic sorption parameters based on sorption experiment data. Six different types of materials are considered. $k_1$ and $k_2$ are the desorption and sorption constants respectively, and $K$ is the sorption equilibrium constant.}
   \label{tbl:sorption_fit}
   \centering
   \begin{tabular}{l c c c}
@@ -48,14 +49,12 @@ We can also see by the $k_2$ values that soil and cinderblock sorb quickly, much
   \end{tabular}
 \end{table}
 
-
-
 \subsection{Soil Sorption's Retarding Effect}\label{sec:retardation_effect}
 
 Building pressurization is a key factor in VI that influences the advective contaminant transport.
-The magnitude of change in response to a pressurization change is significantly influenced by a range of factors, such as soil permeability, foundation depth, or soil moisture.
-To demonstrate the effect that soil sorption has on contaminant soil mass transport in the VI context, we run two types transient simulation where initially the modeled structure is at a steady -5 Pa, i.e. slightly depressurized.
-At the start of the simulation, the building building is 1) further depressurized to -15 Pa, or 2) overpressurized to 15 Pa, and the simulation is allowed to run for 72 hours.
+The magnitude of change in response to a pressurization change is significantly influenced by a range of factors, such as soil permeability, foundation depth, or soil moisture, and of course - sorption, which we will focus on.
+To investigate the effect that soil sorption has on contaminant soil mass transport in the VI context, we run two types transient simulation where initially the modeled structure is depressurized at a steady -5 Pa.
+At the start of the simulation, the building building is further depressurized to -15 Pa \eqref{eq:equilibrium_depressurization}, or overpressurized to 15 Pa \eqref{eq:equilibrium_overpressurization}, and the simulation is allowed to run for 72 hours. % TODO: Update this once the new simulations are done.
 \begin{align}
   \text{Depressurization}: \; \Delta p_\mathrm{in/out} &= \begin{cases}
     -5, \; &t = 0 \; \mathrm{(hr)} \\
@@ -78,17 +77,17 @@ These ranges of values can be used both to represent a soil that has a smaller s
   \label{fig:equilibrium_depressurization}
 \end{figure}
 
-In the top panel of Figure \ref{fig:equilibrium_depressurization}, the indoor air contaminant concentration as the simulated building is undergoing the pressurization in \eqref{eq:equilibrium_depressurization} case.
-Here we can see that for the case when the surrounding soil consists of sand, the indoor concentration increases rapidly as the building is further pressurized.
+The top panel of Figure \ref{fig:equilibrium_depressurization} shows the indoor air contaminant concentration as the simulated building is undergoing the pressurization in \eqref{eq:equilibrium_depressurization} case.
+Here we can see that for the when the surrounding soil consists of sand, the indoor concentration increases rapidly as the building is further pressurized.
 The rate of increase decreases significantly for the sandy loam cases, and progressively retards are the sorbed mass increases ($K_\mathrm{ads}$ increases).\par
 
 The bottom left panel shows how far away the indoor air concentration (as attentuation factor) for each case is from reaching equilibrium.
 At the start of the simulation, the building starts with an attenuation of $\alpha_0$, which is the steady-state concentration when the building is pressurized with -5 Pa.
 As the building is further depressurized to -15 Pa, the indoor air concentration will approach a new equilibrium state $\alpha_{eq}$ (the result of which is from a steady-state simulation at that pressurization).
-By plotting $\frac{|\alpha-\alpha_0|}{|\alpha_{eq}-\alpha_0|}$ we can easily see how far away we are from the new equilibrium state, and a value of 0 represents that we are at the initial concentration, i.e. $\alpha = \alpha_0$, and a value of 1 represents $\alpha = \alpha_{eq}$.\par
+By plotting $\frac{|\alpha-\alpha_0|}{|\alpha_{eq}-\alpha_0|}$ we can easily see how far away we are from the new equilibrium state, and a value of 0 represents that we are at the initial concentration, i.e. $\alpha = \alpha_0$, and a value of 1 represents $\alpha = \alpha_{eq}$, i.e. that the new equilibrium has been reached.\par
 
 This sort of analysis is applied to the bottom right panel as well, but instead of the indoor air concentration (as attentuation factor), we consider the average soil-gas concentration in a 5 cm diameter cylinder that envelop the entire perimeter crack.
-The choice of 5 cm is arbitrary, but helps illustrate what happens with the near-foundation-crack soil-gas concentration, changes in which allow us to better understand how the contaminant is transported into the building from the soil.
+The choice of 5 cm is arbitrary, but helps illustrate what happens in the near-foundation-crack region soil-gas concentration, changes in which allow us to better understand how the contaminant is transported into the building from the soil.
 The same could be done for the soil-gas velocity of course, but the rate of soil-gas velocity change is virtually the same for all of these cases, and reaches the new equilibrium velocity very quickly (much faster than the concentration) and is thus omitted from the figure.\par
 
 Before discussing the role of sorption here, we can first compare the non-sorbing sand and sandy loam cases.
@@ -111,6 +110,11 @@ Thus it is at this point that the contaminant transport in the soil starts to be
 The physical reason for this is that the partitioning between the various phases gives a residence time as the contaminant is transported.
 Under VI conditions, the values of $\theta_w + \theta_g K_H$ are bounded to relatively small values, while $K_\mathrm{ads}$ can vary by orders of magnitude, making sorption potentially a very significant retarder for soil transport.\par
 
+We can also note that the retarding effect of sorption also somewhat depends on the contaminants Henry's Law constant $K_H$, bulk density $\rho_b$ and the moisture content $\theta_w$.
+For instance if the ambient temperature is higher, then contaminant $K_H$ is likewise larger, and sorption induced retardation is greater.
+Generalizing this is difficult however, as $K_\mathrm{ads}$ is also temperature dependent, and the interplay between these may be complicated.
+Nevertheless this hints that there may be a climate/weather component to how significantly sorption induced retardation is.\par
+
 Figure \ref{fig:equilibrium_overpressurization} shows the same sort of analysis as in Figure \ref{fig:equilibrium_depressurization} but with the building pressurization following \eqref{eq:equilibrium_overpressurization}.
 The results here are more or less the same, with the notable exception that in the sand case, the final equilibrium concentration is not initially exceeded.
 As the building is overpressurized, the indoor contaminant are pushed out into the soil.
@@ -126,10 +130,8 @@ Since the indoor air concentration is lower than the soil-gas concentration, thi
 
 \subsection{Indoor Material Sorption And Dynamics}\label{sec:results_indoor_sorption}
 
-We have now explored the effect that sorption has on contaminant mass transport in the sub-surface soil and seen its retarding effect.
-Now we turn to exploring the effect of sorption onto/from various indoor materials has on the indoor air contaminant concentration.
-(Here we assume that there is no soil sorption.)\par
-
+Now we turn to exploring the effect of sorption onto/from various indoor materials has on the indoor air contaminant concentration, again through our model.
+For these simulations we assume that there is no soil sorption.
 To study this we consider the basement (the indoor air space) and assume that the inside surfaces are entirely made up of one of the materials we studied in \ref{sec:results_sorption_fit}.
 We also assume that the material covering the indoor surfaces has a certain thickness or depth that the contaminants can penetrate - giving a certain volume or mass of sorbing material in the indoor.
 Table \ref{tbl:sorbed_material} shows the surface area, penetration depth, and volume of each material studied.
@@ -165,12 +167,11 @@ First we consider the reference case - where there is no sorbing indoor material
 (The blue line is the reference case, which may be difficult to see as the wood and carpet lines overlap.)
 Here we see that as the building is depressurized, the indoor air contaminant concentration increases quickly in response to the pressurization change, and is approaching an equilibrium.\par
 
-% TODO: Add explanation of what - and + mean in the sorption panel
 % TODO: Plot the sorption rate r normalised to the entry rate n_ck? Should be ~1 when materials becomes saturated. Nice way to non-dimensionalize this too. Maybe as second axis plot on the top right panel?
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{sorption_indoor_cycle.pdf}
   \caption{
-  Comparison of how sorption onto/from various indoor materials affect the indoor air contaminant concentration (bottom) of a building that undergoes a pressurization cycle (top left). The rate of de- and sorption for each considered material during the cycle are also shown (top right) and is governed by \eqref{eq:sorption_rate}.}
+  Comparison of how sorption onto/from various indoor materials affect the indoor air contaminant concentration (bottom) of a building that undergoes a pressurization cycle (top left). The rate of de- and sorption for each considered material during the cycle are also shown (top right) and is governed by \eqref{eq:sorption_rate}. A positive value means that contaminant vapors are being sorbed onto/into the material and a negative means the material is desorbing into the indoor air space.}
   \label{fig:indoor_sorption_cycle}
 \end{figure}
 
@@ -232,3 +233,5 @@ We can also see that the contaminant desorption from the materials maintain a hi
   \caption{}
   \label{fig:sorption_mitigation}
 \end{figure}
+
+\textit{Note that this section is still incomplete as I am still working on expanding/improving the analysis/figure.}
