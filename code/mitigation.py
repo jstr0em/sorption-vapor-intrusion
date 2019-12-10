@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import fsolve, root
 
 from comsol import COMSOL
 from material import Material
@@ -46,7 +47,7 @@ class Mitigation:
         Ae = self.get_air_exchange_rate()
         Vbar = Vmat/Vbldg # just simpler to write
 
-        return np.matrix([[-(k2*Vbar+Ae), k1*Vbar],[k2, -k1]])
+        return np.array([[-(k2*Vbar+Ae), k1*Vbar],[k2, -k1]])
 
     def get_eigenvalues(self):
         A = self.get_ode_system()
@@ -66,15 +67,29 @@ class Mitigation:
         A, B = np.linalg.solve(w, c_inis)
         return A*np.exp(lambda1*t)*vec1+B*np.exp(lambda2*t)*vec2
 
+    def get_reduction_time(self, reduction=10):
+        """
+        Calculates when the indoor air concentration has decreased by a certain
+        factor given some initial condition.
+        """
+        c0_in, c0_sorb = self.get_initial_values()
+        target = c0_in/reduction
+        def find_root(t):
+            return self.get_solution(t)[0]-target
+
+        tau = fsolve(find_root, x0=0)
+        print(tau)
+        return tau
 
 x = Mitigation()
 
 
-times = np.linspace(0,100)
+x.get_reduction_time()
 
+"""
+times = np.linspace(0,100)
 c_in = []
 c_sorb = []
-
 for time in times:
     y = x.get_solution(time)
     y = np.array(y)
@@ -87,3 +102,4 @@ plt.semilogy(times, c_in)
 plt.semilogy(times, c_sorb)
 
 plt.show()
+"""
