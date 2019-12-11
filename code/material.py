@@ -1,4 +1,9 @@
 
+def get_all_materials():
+    """ Returns a list of all the materials we studied.
+    """
+    return ['cinderblock', 'paper', 'carpet', 'drywall', 'wood']
+
 class Material:
     def __init__(self, material):
         self.material = material

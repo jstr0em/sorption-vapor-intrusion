@@ -18,8 +18,7 @@ class Kinetics(Experiment, Material, Contaminant):
         return
 
     def get_thermo_states(self):
-        """
-        Method that returns the temperature and pressure of the system.
+        """ Method that returns the temperature and pressure of the system.
 
         Return:
             tuple: temperature (K), absolute pressure (Pa)
@@ -27,12 +26,12 @@ class Kinetics(Experiment, Material, Contaminant):
         return self.T, self.P
 
     def get_gas_const(self):
+        """ Returns ideal gas constant, R.
+        """
         return 8.31446261815324
 
     def get_gas_conc(self, part_by_part=1.12e-9):
-        """
-        Method that converts the air concentration from part by part to mol/m^3
-
+        """ Method that converts the air concentration from part by part to mol/m^3
         Args:
             (optional): Part-by-part of the contaminant
 
@@ -46,8 +45,7 @@ class Kinetics(Experiment, Material, Contaminant):
         return P * part_by_part / (R * T)
 
     def get_adsorbed_conc(self):
-        """
-        Return:
+        """ Return:
             Moles of contaminant sorbed unto material (mol/m^3)
         """
         mass_by_mass = self.get_adsorption_data()
