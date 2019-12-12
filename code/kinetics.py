@@ -15,6 +15,13 @@ class Kinetics(Experiment, Material, Contaminant):
         self.contaminant = contaminant
         self.T = T
         self.P = P
+
+        if self.get_material() != 'none':
+            self.set_reaction_constants()
+        else:
+            self.k1 = 0
+            self.k2 = 0
+            self.K = 0
         return
 
     def get_thermo_states(self):
@@ -81,7 +88,7 @@ class Kinetics(Experiment, Material, Contaminant):
                         y0=0, args=(k1, k2), mxstep=5000)
         return c_star.flatten()
 
-    def get_reaction_constants(self):
+    def set_reaction_constants(self):
         """
         Returns the fitted reaction constants
 
@@ -100,7 +107,12 @@ class Kinetics(Experiment, Material, Contaminant):
 
         k1, k2 = popt
         K = k1 / k2
-        return k1, k2, K
+        self.k1 = k1
+        self.k2 = k2
+        self.K = K
+        return
+    def get_reaction_constants(self):
+        return self.k1, self.k2, self.K
 
     def get_isotherm(self):
         """

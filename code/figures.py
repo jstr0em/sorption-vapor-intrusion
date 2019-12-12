@@ -259,6 +259,7 @@ def mitigation_time_to_reduction():
     materials = get_all_materials()
     taus = []
     for material in materials:
+        print(material)
         x = Mitigation(material=material)
         tau = float(x.get_reduction_time())
         taus.append(tau)
@@ -284,6 +285,6 @@ path = '../figures/'
 #plt.savefig(path+'sorption_indoor_cycle.pdf')
 #indoor_adsorption_zero_entry()
 #plt.savefig(path+'sorption_mitigation.pdf')
-mitigation_time_to_reduction()
+#mitigation_time_to_reduction()
 
-plt.show()
+#plt.show()
