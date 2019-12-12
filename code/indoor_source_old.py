@@ -8,14 +8,13 @@ from scipy.interpolate import interp1d
 from comsol import COMSOL
 from material import Material
 from contaminant import Contaminant
-from indoor_material import IndoorMaterial
-from kinetics import Kinetics
 
-class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
-    def __init__(self, file='../../data/simulation/CPM_cycle_final.csv', material='cinderblock', contaminant='TCE'):
-        COMSOL.__init__(self, file=file)
-        IndoorMaterial.__init__(self,material=material)
-        Kinetics.__init__(self, material=material, contaminant=contaminant)
+class IndoorSource(COMSOL, Material, Contaminant):
+    def __init__(self, file, material='cinderblock', contaminant='TCE', zero_entry_rate=False):
+        COMSOL.__init__(self, file)
+        Contaminant.__init__(self, contaminant)
+        self.zero_entry_rate = zero_entry_rate
+        self.set_building_param()
         self.set_entry_rate()
         self.set_groundwater_concentration()
 

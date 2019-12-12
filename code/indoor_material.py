@@ -34,5 +34,5 @@ class IndoorMaterial(Material, Building):
         material = self.get_material()
         # depth to which contaminant has been adsorbed/penetrated into the material
         penetration_depth = {'cinderblock': 5e-3, 'wood': 1e-3,
-                             'drywall': 1e-2, 'carpet': 1e-2, 'paper': 1e-4, 'none': 0}
+                             'drywall': 1e-2, 'carpet': 1e-2, 'paper': 1e-4, 'none': 0, 'soil': 0}
         return penetration_depth[material]
