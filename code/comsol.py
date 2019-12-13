@@ -58,3 +58,9 @@ class COMSOL(Data):
     def get_concentration_data(self):
         df = self.get_data()
         return df['c_in'].values
+    def get_groudwater_concentration(self):
+        return self.c_gw
+    def set_groundwater_concentration(self):
+        df = self.get_data()
+        self.c_gw = df['c_in'].values[0]/df['alpha'].values[0]
+        return

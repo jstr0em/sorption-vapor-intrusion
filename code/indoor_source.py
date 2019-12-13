@@ -6,75 +6,40 @@ from scipy.optimize import curve_fit, leastsq
 from scipy.interpolate import interp1d
 
 from comsol import COMSOL
-from material import Material
-from contaminant import Contaminant
 from indoor_material import IndoorMaterial
 from kinetics import Kinetics
 
 class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
-    def __init__(self, file='../../data/simulation/CPM_cycle_final.csv', material='cinderblock', contaminant='TCE'):
+    def __init__(self, file='../data/simulation/CPM_cycle_final.csv', material='cinderblock', contaminant='TCE'):
         COMSOL.__init__(self, file=file)
         IndoorMaterial.__init__(self,material=material)
         Kinetics.__init__(self, material=material, contaminant=contaminant)
         self.set_entry_rate()
-        self.set_groundwater_concentration()
 
-        #if material is 'none':
-            #self.material = None
-        #else:
-        Material.__init__(self, material)
-        self.set_material_volume()
-        return
-
-    def get_groudwater_concentration(self):
-        return self.c_gw
-    def set_groundwater_concentration(self):
-        df = self.get_data()
-        self.c_gw = df['c_in'].values[0]/df['alpha'].values[0]
-        return
-
-    def get_zero_entry_rate(self):
-        return self.zero_entry_rate
-    def get_air_exchange_rate(self):
-        return self.Ae
-
-    def get_building_volume(self):
-        return self.V
-
-    def get_room_area(self):
-        return self.A_room
-
-    def set_building_param(self, Ae=0.5, w_ck=1e-2, xyz=(10, 10, 3)):
-        x, y, z = xyz  # x, y, z, dimensions
-
-        A_floor = x * y  # area of the floor/ceilung
-        A_wall_y = y * z  # area of one type of wall
-        A_wall_x = x * z  # area of the other type of wall
-
-        # assigns parameters to class
-        self.V = x * y * z  # building/control volume
-        # surface area of the room
-        self.A_room = 2 * (A_floor + A_wall_y + A_wall_x)
-        self.Ae = Ae
         return
 
     def get_initial_concentration(self):
-
+        """Returns the initial indoor air and sorbed concentrations."""
         Ae = self.get_air_exchange_rate()
         V = self.get_building_volume()
         M = self.get_molar_mass()
+        k1, k2, K = self.get_reaction_constants()
 
         df = self.get_data()
 
-        return df['c_in'].values[0]/M/1e6
+        c0_in = df['c_in'].values[0]/M/1e6
+
+        if K == 0:
+            c0_sorb = 0
+        else:
+            c0_sorb = c0_in/K
+
+        return [c0_in, c0_sorb]
 
     def set_entry_rate(self):
+        """Sets an interpolation function for the contaminant entry rate."""
         # gets time and entry rate data
         t = self.get_time_data()
-
-        if self.get_zero_entry_rate():
-            self.n_ck = interp1d(t, np.repeat(0, len(t)), bounds_error=False, fill_value=0)
-            return
 
         try:
             n_ck = self.get_entry_rate_data() * 1e-6 / M
@@ -91,40 +56,14 @@ class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
     def get_entry_rate(self):
         return self.n_ck
 
-    def set_material_volume(self):
-        material = self.get_material()
-        A_room = self.get_room_area()
-        penetration_depth = self.get_penetration_depth(material)
-        self.V_mat = A_room * penetration_depth
-        return
-
-    def get_material_volume(self):
-        return self.V_mat
-
-    def get_penetration_depth(self, material):
-        material = self.get_material()
-        # depth to which contaminant has been adsorbed/penetrated into the material
-        penetration_depth = {'cinderblock': 5e-3, 'wood': 1e-3,
-                             'drywall': 1e-2, 'carpet': 1e-2, 'paper': 1e-4, 'none': 0}
-        return penetration_depth[material]
-
     def reaction(self, c_in, c_star, k1, k2):
         return k1 * c_star - k2 * c_in
-
-    def set_reaction_constants(self, k1, k2, K):
-        self.k1 = k1
-        self.k2 = k2
-        self.K = K
-        return
-
-    def get_reaction_constants(self):
-        return self.k1, self.k2, self.K
 
     def cstr(self, t, u):
 
         # gets parameters
         Ae = self.get_air_exchange_rate()
-        V = self.get_building_volume()
+        V_bldg = self.get_building_volume()
         V_mat = self.get_material_volume()
         k1, k2, K = self.get_reaction_constants()
 
@@ -137,45 +76,21 @@ class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
         n = self.get_entry_rate()
 
         # odes
-        dc_in_dt = n(t) / V - Ae * c_in + r * V_mat / V
+        dc_in_dt = n(t) / V - Ae * c_in + r * V_mat / V_bldg
         dc_star_dt = -r
 
         return [dc_in_dt, dc_star_dt]
 
-    def cstr_no_rxn(self, t, u):
-
-        # gets parameters
-        Ae = self.get_air_exchange_rate()
-        V = self.get_building_volume()
-
-        # loads variable
-        c_in = u
-
-        # assigns entry rate function
-        n = self.get_entry_rate()
-
-        # ode
-        dc_in_dt = n(t) / V - Ae * c_in
-        return dc_in_dt
-
     def solve_cstr(self):
         t = self.get_time_data()
-        c0_in = self.get_initial_concentration()
+        c0s = self.get_initial_concentrations()
+        k1, k2, K = self.get_reaction_constants()
 
-        if self.get_material() == None:
-            r = solve_ivp(self.cstr_no_rxn, t_span=(
-                t[0], t[-1]), y0=[c0_in], method='Radau', t_eval=t, max_step=0.1)
-            t, c, c_star = r['t'], r['y'][0], np.repeat(0, len(r['y'][0]))
-
-            return t, c, c_star, np.repeat(0, len(t))
-        else:
-            k1, k2, K = self.get_reaction_constants()
-            c0 = [c0_in, c0_in / K]
-            r = solve_ivp(self.cstr, t_span=(t[0], t[-1]), y0=c0, method='Radau',
-                          t_eval=t, max_step=0.1)
-            t, c, c_star = r['t'], r['y'][0], r['y'][1]
-            rxn = self.reaction(c, c_star, k1, k2)
-            return t, c, c_star, rxn
+        r = solve_ivp(self.cstr, t_span=(t[0], t[-1]), y0=c0s, method='Radau',
+                      t_eval=t, max_step=0.1)
+        t, c, c_star = r['t'], r['y'][0], r['y'][1]
+        rxn = self.reaction(c, c_star, k1, k2)
+        return t, c, c_star, rxn
 
     def get_dataframe(self):
         df = self.get_data()

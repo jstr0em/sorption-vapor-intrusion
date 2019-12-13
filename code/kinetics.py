@@ -16,13 +16,17 @@ class Kinetics(Experiment, Material, Contaminant):
         self.T = T
         self.P = P
 
-        if self.get_material() != 'none':
+        if self.get_material() in self.get_supported_materials():
             self.set_reaction_constants()
         else:
             self.k1 = 0
             self.k2 = 0
             self.K = 0
         return
+
+    def get_supported_materials(self):
+        df = self.get_data()
+        return df['material'].unique()
 
     def get_thermo_states(self):
         """ Method that returns the temperature and pressure of the system.
@@ -52,27 +56,26 @@ class Kinetics(Experiment, Material, Contaminant):
         return P * part_by_part / (R * T)
 
     def get_adsorbed_conc(self):
-        """ Return:
-            Moles of contaminant sorbed unto material (mol/m^3)
-        """
+        """Return moles of contaminant sorbed unto material (mol/m^3)."""
         mass_by_mass = self.get_adsorption_data()
         rho = self.get_material_density()
         M = self.get_molar_mass()
         return mass_by_mass * rho / 1e9 / M
 
     def adsorption_kinetics(self, c_star, t, k1, k2):
+        """Returns the net sorption "reaction" equation."""
         c = self.get_gas_conc()
         r = k1 * c_star - k2 * c
         return -r
 
     def get_time_data(self):
-        """
-        Return:
-            Adsorption time data (hr)
-        """
+        """Returns adsorption time data (hr)."""
         material = self.get_material()
+
         data = self.get_data()
+        print(material, data)
         data = data.loc[data['material'] == material]
+        print(material, data)
         return np.append(0, data['time'].values) / 60
 
     def get_adsorption_data(self):
@@ -101,7 +104,7 @@ class Kinetics(Experiment, Material, Contaminant):
         """
         t_data = self.get_time_data()
         c_star_data = self.get_adsorbed_conc()
-
+        print(len(t_data),len(c_star_data))
         popt, pcov = curve_fit(self.solve_reaction, t_data,
                                c_star_data, p0=[1e-2, 1e2])
 

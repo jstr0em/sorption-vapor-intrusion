@@ -12,6 +12,7 @@ from material import Material
 from comsol import COMSOL
 from kinetics import Kinetics
 from indoor_source import IndoorSource
+from material import get_indoor_materials
 
 class Analysis:
     def get_kinetics_data(self):
@@ -30,22 +31,14 @@ class Analysis:
                             'k1': k1s, 'k2': k2s, 'K': Ks})
         return data
 
-    def generate_indoor_material_data(self, zero_entry_rate=False):
-        materials = Material('cinderblock').get_materials()[0:-1]
-        materials.append('none')
+    def generate_indoor_material_data(self):
+        materials = get_indoor_materials()
         dfs = []
 
         for material in materials:
-            indoor = IndoorSource(
-                '../data/simulation/CPM_cycle_final.csv', material=material, zero_entry_rate=zero_entry_rate)
-            if material != 'none':
-                rxn = Kinetics(
-                    '../data/adsorption_kinetics.csv', material=material)
-                k1, k2, K = rxn.get_reaction_constants()
-                indoor.set_reaction_constants(k1, k2, K)
-                df = indoor.get_dataframe()
-            else:
-                df = indoor.get_dataframe()
+            print('Processing '+material)
+            indoor = IndoorSource(material=material)
+            df = indoor.get_dataframe()
             df.sort_values(by='time', inplace=True)
             df.reset_index(inplace=True, drop=True)
             df['material'] = np.repeat(material, len(df))

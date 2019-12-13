@@ -1,8 +1,11 @@
 
 def get_all_materials():
-    """ Returns a list of all the materials we studied.
-    """
+    """Returns a list of all the materials we studied."""
     return ['cinderblock', 'paper', 'carpet', 'drywall', 'wood', 'soil', 'none']
+
+def get_indoor_materials():
+    """Returns list of all the indoor materials studied (excluding soil)."""
+    return ['cinderblock', 'paper', 'carpet', 'drywall', 'wood', 'none']
 
 class Material:
     def __init__(self, material):

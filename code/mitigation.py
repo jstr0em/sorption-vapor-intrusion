@@ -96,9 +96,3 @@ class Mitigation(IndoorMaterial, Kinetics):
 
         tau = fsolve(find_root, x0=0)
         return tau
-
-
-t = np.linspace(0,24)
-x = Mitigation(material='none')
-y = x.get_solution(t)
-print(y[0])

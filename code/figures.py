@@ -259,7 +259,6 @@ def mitigation_time_to_reduction():
     materials = get_all_materials()
     taus = []
     for material in materials:
-        print(material)
         x = Mitigation(material=material)
         tau = float(x.get_reduction_time())
         taus.append(tau)
@@ -267,7 +266,6 @@ def mitigation_time_to_reduction():
     df = pd.DataFrame(data={'Material': [item.title() for item in materials], 'Reduction Time (hr)': taus})
 
     df.plot(x='Material', y='Reduction Time (hr)', kind='bar')
-    print(df)
     return
 # may not be included
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
@@ -281,10 +279,10 @@ path = '../figures/'
 
 
 
-#indoor_adsorption()
+indoor_adsorption()
 #plt.savefig(path+'sorption_indoor_cycle.pdf')
 #indoor_adsorption_zero_entry()
 #plt.savefig(path+'sorption_mitigation.pdf')
 #mitigation_time_to_reduction()
 
-#plt.show()
+plt.show()
