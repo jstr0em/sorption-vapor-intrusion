@@ -73,9 +73,7 @@ class Kinetics(Experiment, Material, Contaminant):
         material = self.get_material()
 
         data = self.get_data()
-        print(material, data)
         data = data.loc[data['material'] == material]
-        print(material, data)
         return np.append(0, data['time'].values) / 60
 
     def get_adsorption_data(self):
@@ -104,7 +102,6 @@ class Kinetics(Experiment, Material, Contaminant):
         """
         t_data = self.get_time_data()
         c_star_data = self.get_adsorbed_conc()
-        print(len(t_data),len(c_star_data))
         popt, pcov = curve_fit(self.solve_reaction, t_data,
                                c_star_data, p0=[1e-2, 1e2])
 
