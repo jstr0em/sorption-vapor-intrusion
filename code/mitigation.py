@@ -84,13 +84,13 @@ class Mitigation(IndoorMaterial, Kinetics):
         else:
             return self.get_no_material_solution(t)
 
-    def get_reduction_time(self, reduction=10):
+    def get_reduction_time(self, reduction=0.5):
         """
         Calculates when the indoor air concentration has decreased by a certain
         factor given some initial condition.
         """
         c0_in, c0_sorb = self.get_initial_values()
-        target = c0_in/reduction
+        target = c0_in*reduction
         def find_root(t):
             return self.get_solution(t)[0]-target
 

@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from analysis import IndoorSource, Kinetics, Material, Analysis
 import matplotlib.ticker as mtick
 from matplotlib.gridspec import GridSpec
 
-from material import get_all_materials
+from material import get_all_materials, get_indoor_materials
 from mitigation import Mitigation
 plt.style.use('seaborn')
 def indoor_adsorption():
@@ -256,16 +257,59 @@ def time_to_equilibrium():
 
 
 def mitigation_time_to_reduction():
-    materials = get_all_materials()
+    materials = get_indoor_materials()
+    reductions = [0.5, 0.1, 0.01, 0.001]
     taus = []
+    reds = [] # for storage
+    mats = []
+
     for material in materials:
         x = Mitigation(material=material)
-        tau = float(x.get_reduction_time())
-        taus.append(tau)
+        for reduction in reductions:
+            tau = float(x.get_reduction_time(reduction=reduction))
+            taus.append(tau)
+            reds.append(reduction)
+            mats.append(material.title())
 
-    df = pd.DataFrame(data={'Material': [item.title() for item in materials], 'Reduction Time (hr)': taus})
+    df = pd.DataFrame(
+        data={
+            'Material': mats,
+            'Reduction time (hr)': taus,
+            'Reduction factor': reds,
+            }
+        )
 
-    df.plot(x='Material', y='Reduction Time (hr)', kind='bar')
+
+    df.sort_values(
+        by=['Reduction factor','Reduction time (hr)'],
+        ascending=[False, True],
+        inplace=True,
+    )
+    fig, ax = plt.subplots(dpi=300)
+    sns.barplot(
+        data=df,
+        x='Reduction factor',
+        y='Reduction time (hr)',
+        hue='Material',
+        ax=ax,
+    )
+    total = len(df)
+    for p in ax.patches:
+        height = p.get_height()
+        ax.text(
+            p.get_x()+p.get_width()/2.,
+            height,
+            '{:1.1f}'.format(height),
+            ha="center",
+        )
+
+    ax.set(
+        title='How contaminant desorption affects the time for indoor air concentration to reduce by a given factor\nafter contaminant entry has ceased.',
+        yscale='log',
+    )
+
+    print(df.set_index(['Reduction factor', 'Material']))
+    plt.tight_layout()
     return
 # may not be included
 #Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
@@ -279,10 +323,11 @@ path = '../figures/'
 
 
 
-indoor_adsorption()
+#indoor_adsorption()
 #plt.savefig(path+'sorption_indoor_cycle.pdf')
 #indoor_adsorption_zero_entry()
 #plt.savefig(path+'sorption_mitigation.pdf')
-#mitigation_time_to_reduction()
+mitigation_time_to_reduction()
+plt.savefig(path+'sorption_reduction_time.pdf')
 
 plt.show()
