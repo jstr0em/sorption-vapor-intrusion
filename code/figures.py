@@ -309,6 +309,8 @@ def mitigation_time_to_reduction():
     )
 
     print(df.set_index(['Reduction factor', 'Material']))
+
+    ax.legend(loc='upper left')
     plt.tight_layout()
     return
 # may not be included
