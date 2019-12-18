@@ -36,7 +36,7 @@
 \address[Brown]{Brown University, School of Engineering, Providence, RI, USA}
 
 \begin{abstract}
-Abstract here
+\input{abstract.tex}
 \end{abstract}
 
 \begin{keyword}
@@ -44,7 +44,6 @@ Abstract here
 \end{keyword}
 
 \end{frontmatter}
-
 
 \input{intro.tex}
 \input{methods.tex}
@@ -56,8 +55,44 @@ This project was supported by grant ES-201502 from the Strategic Environmental R
 
 Declaration of interest: none
 
-
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
+
+\begin{comment}
+Main point of this paper:
+
+To explore how sorption affects VI transport in soils and indoor environment,
+and the effect that sorption has on efficacy of mitigation systems
+
+Outline:
+
+Introduction:
+* Why study sorption in VI?
+- Many materials (significantly) sorb VI contaminants.
+- No previous studies.
+- May significantly affect:
+-- Mitigation
+-- VI investigations
+
+* What are we gonna do to bridge till gap?
+- Measure sorptive capacities at relevant concentrations. Why?
+-- Isotherms non-linear w.r.t. concentration & few studies at VI relevant conditions.
+-- Pick TCE (contaminant of significant concern).
+- Apply results in our VI model.
+-- Used extensively before
+-- In lieu of a study house this will give some insights
+
+* Outline
+- Experimental setup
+- Numerical model & governing equations
+- Results regarding:
+-- Soil transport & sorption
+-- Indoor environment transport & sorption (specifically how response of c_in w.r.t. pressurization changes).
+-- Reduction of mitigation system efficacy
+
+
+
+
+\end{comment}
 
 \end{document}
