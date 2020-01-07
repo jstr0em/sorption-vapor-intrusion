@@ -23,19 +23,20 @@ What do you want to convince people of?
 \section{Introduction}\label{sec:intro}
 
 % Attention grabbing intro
-Many vapor intrusion (VI) contaminants has the capacity to sorb onto soil and various common indoor materials, but the role and more importantly, the consequences of these sorption processes in VI are poorly understood\cite{meininghaus_diffusion_2000,meininghaus_diffusion_2002,tillman_review_2005}.
-The migration of contaminant vapors from its source into the VI affected building and potential indoor sources is usually the prime concern in VI investigations.
-Rarely is the sorbed contaminant vapors in the soil or indoor considered in an investigation, but these may potentially act as a capacitor, storing and releasing contaminant vapors in response to a change in contaminant concentration.
-Consequently, contaminant vapors may be much more persistent at a site that has undergone remediation, potentially reducing the effectiveness of mitigation systems, or impeding site investigations.\par
+Most vapor intrusion (VI) contaminants have the capacity to sorb onto soil and various common indoor materials, but the role and more importantly, the consequences of these sorption processes in VI are poorly understood\cite{meininghaus_diffusion_2000,meininghaus_diffusion_2002,tillman_review_2005}.
+The migration of contaminant vapors from their source into the VI impacted building and potential indoor sources is usually the prime concern in VI investigations.
+Rarely are the sorbed contaminant vapors in the soil or indoor considered in an investigation.
+These may potentially act as a capacitance, storing and releasing contaminant vapors in response to a change in contaminant concentration.
+Consequently, contaminant vapors may be more persistent than expected at a site that has undergone remediation, potentially reducing the effectiveness of mitigation in the short term, or leading to misleading results regarding mitigation efficacy.\par
 
-It is well recognized that building materials has the capacity to sorb pollutants.
-The sorptive capacity of various volatile organic compounds (VOCs) of concern in VI have been tested on a variety of building materials, such as density board\cite{wang_correlation_2008}, gypsum wallboard\cite{xu_determination_2012}, and plywood and carpets\cite{bodalal_method_2000}.
+It is well recognized that building materials have the capacity to sorb pollutants.
+The sorptive capacity of various volatile organic compounds (VOCs) of concern in VI has been examined on a variety of building materials, such as particle density board\cite{wang_correlation_2008}, gypsum wallboard\cite{xu_determination_2012}, and plywood and carpets\cite{bodalal_method_2000}.
 However, most of these studies used relative high contaminant concentrations, usually around $\mathrm{mg/m^3}$\cite{wang_correlation_2008} or even higher.
-This is several magnitudes higher than the concentrations relevant in VI and due to the non-linear nature of sorption with respect to concentration, sorption studies at lower concentration are needed.\par
+This is several orders of magnitude higher than the concentrations relevant in VI and due to the non-linear nature of sorption with respect to concentration, sorption studies at lower concentration are needed.\par
 
-Most of the VOC sorption studies have also focused on the interaction between building materials and formaldehyde\cite{xu_determination_2012}, toluene, and decane\cite{bodalal_method_2000}.
-However, one of the contaminants of greatest concern in VI - trichloroethylene (TCE), has not received likewise attention.
-This is despite the fact that sorbing TCE (and other VOCs) on activated carbon is extensively used to treat indoor air contaminant and their use with passive sorption tube samplers\cite{u.s._environmental_protection_agency_oswer_2015}.\par
+Many VOC sorption studies have also focused on the interaction between building materials and formaldehyde\cite{xu_determination_2012}, toluene, and decane\cite{bodalal_method_2000}.
+However, one of the contaminants of greatest concern in VI - trichloroethylene (TCE), has not received attention.
+This is despite the fact that sorption of TCE (and other comparable VOCs) on activated carbon is extensively used to treat indoor air contamination and their sorption on passive tube samplers is widely employed for analysis of these compounds\cite{u.s._environmental_protection_agency_oswer_2015}.\par
 
 % Some elaboration on these consequences? E.g. cover:
 % - EPA site investigation recommendations
@@ -43,31 +44,31 @@ This is despite the fact that sorbing TCE (and other VOCs) on activated carbon i
 % - Remediation (are there any examples of vapor being more persistent?)
 % Separate paragraph for each?
 
-Over the years many VI sites have been investigated for their potential exposure risk.
+Over the years many VI sites have been investigated.
 Two well-known examples of these are the studies of a house in Layton, Utah and one in Indianapolis, Indiana.
-Both of these sites were outfitted with a wide variety of instrumentation to measure various metrics such as contaminant concentration in interior, soil, and groundwater, as well as things like pressure, temperature, or weather.
-These studies yielded some of the richest VI datasets available and gave invaluable insights, in particular in the application of CPM\cite{holton_long-term_2015} and sub-slab depressurization (SSD) mitigation systems\cite{lutes_comparing_2015,u.s._environmental_protection_agency_assessment_2015}.
-However, neither of these studies considered the role of sorption had at these sites.\par
+Both of these sites were outfitted with a wide variety of instrumentation to measure various metrics such as contaminant concentration in interior, soil, and groundwater, as well as pressure, temperature, or weather.
+These studies yielded some of the richest VI datasets available and gave invaluable insights into the VI process, including into the application of CPM\cite{holton_long-term_2015} and sub-slab depressurization (SSD) mitigation systems\cite{lutes_comparing_2015,u.s._environmental_protection_agency_assessment_2015}.
+However, neither of these studies considered the role that sorption may have had at these sites.\par
 
-The potential impact of sorption could perhaps be most significant in the application of the controlled pressure method (CPM) and various mitigation schemes.
-The controlled pressure method is the forced over- and depressurization of a building to max- and minimize the contaminant entry into the building.
+The potential impact of sorption could perhaps be most significant in situations in which contaminant entry rates vary widely with time, such as in the application of the controlled pressure method (CPM) and various mitigation schemes.
+The controlled pressure method involves the forced over- and depressurization of a building to maximize or minimize the contaminant entry rate into the building.
 This can help the investigator ascertain the worst-case VI scenario and help identify potential indoor contaminant sources\cite{mchugh_recent_2017,holton_long-term_2015}.
-However, if the building indoor materials has a large sorptive capacities, then de- and sorption processes may significantly affect the indoor air contaminant concentration.
-Likewise, a significant amount of sorbed material may be released from the interior over an unknown period of time after mitigating the contaminant intrusion at a site\cite{meininghaus_diffusion_2000,meininghaus_diffusion_2002}.\par
+However, if the building indoor materials have a large sorptive capacities, then desorption and sorption processes may significantly affect the indoor air contaminant concentration.
+Likewise, a significant amount of sorbed contaminant may be released from interior materials over an unknown period of time after mitigating the contaminant intrusion at a site\cite{meininghaus_diffusion_2000,meininghaus_diffusion_2002}.\par
 
 % Why use modeling for this? Cover:
 % - Briefly why we wish to model
 % - Sorption in other models and their applications (or lack thereof I should say)
-In the past VI models have been used to gain insight into VI when no field or experimental data has been available.
-Previously examples of VI modeling studies are the role of rainfall in VI\cite{shen_numerical_2012}, or drivers of temporal variability in some of the aforementioned sites\cite{strom_factors_2019}.
-However, while many VI models include a sorption term in the governing equation for contaminant transport in soils, none have explored the role of sorption in VI in a transient simulation.
+In the past, VI models have been used to gain further insight into VI processes. % TODO: Add some citations here.
+Previous examples of VI modeling studies include one on the role of rainfall in VI\cite{shen_numerical_2012}, or drivers of temporal variability in some of the aforementioned sites\cite{strom_factors_2019}.
+However, while many VI models are presented including a sorption term in the governing equation for contaminant transport in soils, none have really explored the role of sorption in VI in a transient simulation.
 The reason for this is two-fold.
-First, there has been a general lack of interest in sorption and VI thus far.
-Secondly, the vast majority of VI modeling efforts and studies has focused on steady-state analyses of VI, and sorption only affects soil contaminant transport in time-dependent scenarios.\par
+First, there has been a general lack of interest in sorption related to VI thus far.
+Secondly, the vast majority of VI modeling efforts and studies have focused on steady-state analyses of VI, and sorption only affects soil contaminant transport in time-dependent scenarios.\par
 
 % Final paragraph - outlining what we will do:
-To bridge this knowledge gap we will begin to explore the role of sorption in VI through a combined effort of experimental and simulation work.
-Sorption data of TCE on various cinderblock, drywall, wood, paper, carpet, and Appling soil will be measured in a fixed bed sorption experiment.
-These sorption data will be used to generate kinetic sorption parameters to be used in our three-dimensional finite element VI model.
-For this purpose we will consider a prototypical VI scenario where a free-standing house with a basement is overlying a homogenously contaminated groundwater source.
-Using this model we will investigate how the dynamic contaminant transport is affected in general by sorption, how indoor sorption materials affect indoor air concentration as the building's pressurization fluctuates and how indoor air concentration are affected by indoor materials following successful mitigation of the structure.\par
+To bridge this knowledge gap we will explore the role of sorption in VI by considering the signifnance of newly obtained contaminant sorption data in the context of VI models.
+Sorption data of TCE on various materials, including cinderblock, drywall, wood, paper, carpet, and Appling soil have been measured in a fixed bed sorption experiment.
+These sorption data are used to generate sorption parameters to be used in a three-dimensional finite element VI model.
+For this purpose we will consider a prototypical VI scenario where a free-standing house, with a basement, is overlying a homogenously contaminated groundwater source.
+Using this model we investigate how contaminant transport is affected by sorption, how indoor sorptive materials affect indoor air concentration as the building's pressurization fluctuates and how indoor air concentration are affected by indoor materials following successful mitigation of the structure.\par
