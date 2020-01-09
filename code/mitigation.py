@@ -31,7 +31,7 @@ class Mitigation(IndoorMaterial, Kinetics):
         Ae = self.get_air_exchange_rate()
         Vbar = Vmat/Vbldg # just simpler to write
 
-        return np.array([[-(k2*Vbar+Ae), k1*Vbar],[k2, -k1]])
+        return np.array([[-(k1*Vbar+Ae), k2*Vbar],[k1, -k2]])
 
     def get_eigenvalues(self):
         A = self.get_ode_system()
@@ -43,7 +43,7 @@ class Mitigation(IndoorMaterial, Kinetics):
         c0 = 2 # ug/m^3 indoor air concentrations
 
         if self.get_material() != 'none':
-            c0_sorb = c0/K
+            c0_sorb = c0*K
         else:
             c0_sorb = 0
         return np.array([c0, c0_sorb])

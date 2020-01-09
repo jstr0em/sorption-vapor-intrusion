@@ -9,6 +9,7 @@ class COMSOL(Data):
     def __init__(self, file):
         Data.__init__(self, file)
         self.process_raw_data()
+        self.set_groundwater_concentration()
         self.A_ck = 0.1 * 4
         return
 

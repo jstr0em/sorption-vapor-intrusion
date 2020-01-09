@@ -1,13 +1,11 @@
 from pandas import read_csv
-from data import Data
+#from data import Data
 
-class Experiment(Data):
+class Experiment:
     def __init__(self, file):
-        Data.__init__(self, file)
-        self.set_raw_data()
+        #Data.__init__(self, file)
+        self.sorption_data = read_csv(file)
         return
 
-    def set_raw_data(self):
-        path = self.get_path()
-        self.data = read_csv(path)
-        return
+    def get_sorption_data(self):
+        return self.sorption_data

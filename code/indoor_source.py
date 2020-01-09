@@ -12,13 +12,14 @@ from kinetics import Kinetics
 class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
     def __init__(self, file='../data/simulation/CPM_cycle_final.csv', material='cinderblock', contaminant='TCE'):
         COMSOL.__init__(self, file=file)
+
         IndoorMaterial.__init__(self,material=material)
         Kinetics.__init__(self, material=material, contaminant=contaminant)
         self.set_entry_rate()
 
         return
 
-    def get_initial_concentration(self):
+    def get_initial_concentrations(self):
         """Returns the initial indoor air and sorbed concentrations."""
         Ae = self.get_air_exchange_rate()
         V = self.get_building_volume()
@@ -32,7 +33,7 @@ class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
         if K == 0:
             c0_sorb = 0
         else:
-            c0_sorb = c0_in/K
+            c0_sorb = c0_in*K
 
         return [c0_in, c0_sorb]
 
@@ -57,7 +58,7 @@ class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
         return self.n_ck
 
     def reaction(self, c_in, c_star, k1, k2):
-        return k1 * c_star - k2 * c_in
+        return k1 * c_in - k2 * c_star
 
     def cstr(self, t, u):
 
@@ -76,8 +77,8 @@ class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
         n = self.get_entry_rate()
 
         # odes
-        dc_in_dt = n(t) / V - Ae * c_in + r * V_mat / V_bldg
-        dc_star_dt = -r
+        dc_in_dt = n(t) / V_bldg - Ae * c_in + -r * V_mat / V_bldg
+        dc_star_dt = r
 
         return [dc_in_dt, dc_star_dt]
 
@@ -90,7 +91,7 @@ class IndoorSource(COMSOL, IndoorMaterial, Kinetics):
                       t_eval=t, max_step=0.1)
         t, c, c_star = r['t'], r['y'][0], r['y'][1]
         rxn = self.reaction(c, c_star, k1, k2)
-        return t, c, c_star, rxn
+        return t, c, c_star, -rxn
 
     def get_dataframe(self):
         df = self.get_data()

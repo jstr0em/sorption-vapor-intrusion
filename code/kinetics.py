@@ -17,6 +17,7 @@ class Kinetics(Experiment, Material, Contaminant):
         self.P = P
 
         if self.get_material() in self.get_supported_materials():
+            print('Material supported, generating reaction constants.')
             self.set_reaction_constants()
         else:
             self.k1 = 0
@@ -25,7 +26,7 @@ class Kinetics(Experiment, Material, Contaminant):
         return
 
     def get_supported_materials(self):
-        df = self.get_data()
+        df = self.get_sorption_data()
         return df['material'].unique()
 
     def get_thermo_states(self):
@@ -65,20 +66,20 @@ class Kinetics(Experiment, Material, Contaminant):
     def adsorption_kinetics(self, c_star, t, k1, k2):
         """Returns the net sorption "reaction" equation."""
         c = self.get_gas_conc()
-        r = k1 * c_star - k2 * c
-        return -r
+        r = k1 * c - k2 * c_star
+        return r
 
-    def get_time_data(self):
+    def get_time_data2(self):
         """Returns adsorption time data (hr)."""
+        print('Getting sorption time data.')
         material = self.get_material()
-
-        data = self.get_data()
+        data = self.get_sorption_data()
         data = data.loc[data['material'] == material]
         return np.append(0, data['time'].values) / 60
 
     def get_adsorption_data(self):
         material = self.get_material()
-        data = self.get_data()
+        data = self.get_sorption_data()
         data = data.loc[data['material'] == material]
 
         mass_by_mass = np.append(0, data['mass'].values)
@@ -100,10 +101,10 @@ class Kinetics(Experiment, Material, Contaminant):
             k2 : adsorption rate (1/hr)
             K : equilibrium constant (1)
         """
-        t_data = self.get_time_data()
+        t_data = self.get_time_data2()
         c_star_data = self.get_adsorbed_conc()
         popt, pcov = curve_fit(self.solve_reaction, t_data,
-                               c_star_data, p0=[1e-2, 1e2])
+                               c_star_data, p0=[1e2, 1e-2])
 
         k1, k2 = popt
         K = k1 / k2
@@ -126,4 +127,4 @@ class Kinetics(Experiment, Material, Contaminant):
         k1, k2, K = self.get_reaction_constants()
         rho = self.get_material_density()
         rho *= 1e-3  # converts to kg/m^3
-        return 1 / (K * rho)
+        return K / rho
