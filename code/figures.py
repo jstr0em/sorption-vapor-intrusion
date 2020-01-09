@@ -310,7 +310,7 @@ def mitigation_time_to_reduction():
 
     print(df.set_index(['Reduction factor', 'Material']))
 
-    ax.legend(loc='upper left')
+    ax.legend(loc='upper left', title='Material')
     plt.tight_layout()
     return
 # may not be included
@@ -325,8 +325,8 @@ path = '../figures/'
 
 
 
-#indoor_adsorption()
-#plt.savefig(path+'sorption_indoor_cycle.pdf')
+indoor_adsorption()
+plt.savefig(path+'sorption_indoor_cycle.pdf')
 #indoor_adsorption_zero_entry()
 #plt.savefig(path+'sorption_mitigation.pdf')
 mitigation_time_to_reduction()
