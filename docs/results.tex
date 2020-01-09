@@ -3,13 +3,13 @@
 \subsection{Fitting Sorption Parameters}\label{sec:results_sorption_fit}
 % TODO: Make sure all your k_1 and k_2 descriptions are ok.
 Figure \ref{fig:sorption_fit} shows the result of fitting the sorption data for three select materials - wood, Appling soil, and cinderblock concrete.
-The $k_1$ and $k_2$ represent the rates at which TCE desorbs and sorbs respectively onto/from the material of interest.
+The $k_1$ and $k_2$ represent the rates at which TCE sorbs and desorbs respectively onto/from the material of interest.
 The equilibrium partition constant, using the formulation in \eqref{eq:sorption_rate}, is given by
 \begin{equation}
-  K = \frac{k_2}{k_1}
+  K = \frac{k_1}{k_2}
 \end{equation}
 and defines the sorption isotherm.
-Here a large $K$ indicates that there is a greater propensity for contaminant sorption.\par
+Here a larger $K$ indicates that there is a greater propensity for contaminant sorption.\par
 
 To apply a soil sorption isotherm in \eqref{eq:mass_transport} $K$ needs to be converted to $\mathrm{m^3/kg}$.
 This is done by multiplying $K$ isotherm with inverse of the soil bulk density $\rho_b$, which is taken to be $1460 \; \mathrm{kg/m^3}$. % TODO: Cite the density
@@ -29,19 +29,19 @@ We can also see by that soil and cinderblock sorb quickly, much faster than a ma
 
 % TODO: Add the relative sorbed mass compared to air. I.e. cinderblock has ~ 7800 more mass for the same volume.
 \begin{table}[htb!]
-  \caption{Fitted kinetic sorption parameters based on sorption experiment data. Six different types of materials are considered. $k_1$ and $k_2$ are the desorption and sorption constants respectively, and $K$ is the sorption equilibrium constant.}
+  \caption{Fitted kinetic sorption parameters based on sorption experiment data. Six different types of materials are considered. $k_1$ and $k_2$ are the sorption and desorption constants respectively, and $K$ is the sorption equilibrium constant.}
   \label{tbl:sorption_fit}
   \centering
   \begin{tabular}{l c c c}
     \toprule
     Material & $k_1 \; \mathrm{(1/hr)}$ & $k_2 \; \mathrm{(1/hr)}$ & $K$ \\
     \hline
-    Wood & 0.32 & 44.90 & $7.10 \cdot 10^{-3}$ \\
-    Drywall & 0.41 & 87.94 & $4.65 \cdot 10^{-3}$ \\
-    Carpet & 0.26 & 58.74 & $4.42 \cdot 10^{-3}$ \\
-    Paper & 0.04 & 88.37 & $4.55 \cdot 10^{-4}$ \\
-    Soil & 0.34 & 2636.57 & $1.30 \cdot 10^{-4}$ \\
-    Cinderblock & 0.10 & 4175.16 & $2.40 \cdot 10^{-5}$ \\
+    Wood & 44.90 & 0.32 & 140.90 \\
+    Drywall & 87.94 & 0.41 & 214.87 \\
+    Carpet & 58.74 & 0.26 & 226.21 \\
+    Paper & 88.37 & 0.04 & 2195.69 \\
+    Soil & 2636.57 & 0.34 & 7702.94 \\
+    Cinderblock & 4175.16 & 0.10 & 41501.26 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -232,8 +232,25 @@ The decrease in indoor air concentration (as attenuation factor $\alpha$) for ea
 As excepted, when there is no sorbing indoor materials, i.e. our reference case, the indoor concentration decreases log-linearily.
 We can also see that contaminant desorption from materials maintains a higher indoor air concentration relative to reference, with cinderblock again shown to have the great impact.\par
 
+% TODO: Update the code to generate this figure using the mitigation class
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{sorption_mitigation.pdf}
   \caption{}
   \label{fig:sorption_mitigation}
+\end{figure}
+
+Clearly, the contaminant desorption from indoor materials can significantly delay the time that a certain reduction in indoor air concentration after a successful mitigation system has been implemented.
+In Figure \ref{fig:sorption_reduction_time} we quantified the number of hours for a fifty percent, a one and two orders of magnitude reduction in indoor air concentration to occurs, both absent sorbing indoor materials (the reference case) and in the presence of the one's presented earlier in this work.
+On the x-axis the indoor air concentration reduction factor is shown, and on the y-axis the number of hours for the specified reduction occur is displayed, for each material.
+The number of hours for each case are also shown at the top of each bar.\par
+
+From this, we see that it takes 1.4 hours for the a 50\% reduction in indoor air concentration to occur for the reference, paper, and wood cases, while this time increases up to 305 hours in the cinderblock case.
+This indicates the significant effect that sorption of TCE onto cinderblock can potentially have on the efficacy on a VI mitigation scheme, with the remaining materials having a relatively minor or moderate effect; a trend we've seen in other parts of this work.
+
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{sorption_reduction_time.pdf}
+  \caption{}
+  \label{fig:sorption_reduction_time}
 \end{figure}
