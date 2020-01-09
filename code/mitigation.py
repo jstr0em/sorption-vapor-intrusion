@@ -11,11 +11,7 @@ class Mitigation(IndoorMaterial, Kinetics):
         IndoorMaterial.__init__(self,material=material)
         Kinetics.__init__(self, material=material, contaminant=contaminant)
 
-
-
         return
-
-
 
     def get_ode_system(self):
         """

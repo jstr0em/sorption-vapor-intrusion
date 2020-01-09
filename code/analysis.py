@@ -13,6 +13,7 @@ from comsol import COMSOL
 from kinetics import Kinetics
 from indoor_source import IndoorSource
 from material import get_indoor_materials
+from mitigation import Mitigation
 
 class Analysis:
     def get_kinetics_data(self):
@@ -88,3 +89,25 @@ class Analysis:
 
         df['p_cycle'].replace([2, 3], ['Depressurization', 'Overpressurization'], inplace=True)
         return df.set_index(['soil','K_ads','p_cycle', 'time'])
+
+
+def get_sorption_mitigation_data():
+    materials = get_indoor_materials()
+    times = np.linspace(0,24,100)
+    ts, c_ins, c_sorbs, mats = [], [], [], []
+
+
+    for material in materials:
+
+        mit = Mitigation(material=material)
+        for time in times:
+            c = mit.get_solution(time)
+
+            ts.append(time)
+            c_ins.append(c[0][0])
+            c_sorbs.append(c[1][0])
+            mats.append(material)
+
+
+    df = pd.DataFrame(data={'time': ts, 'c_in': c_ins, 'c_sorbs': c_sorbs, 'material': mats})
+    return df.set_index(['material', 'time'])

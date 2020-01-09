@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from analysis import IndoorSource, Kinetics, Material, Analysis
+from analysis import Analysis, get_sorption_mitigation_data
 import matplotlib.ticker as mtick
 from matplotlib.gridspec import GridSpec
 
@@ -145,19 +145,13 @@ def soil_adsorption():
 
 def indoor_adsorption_zero_entry():
     analysis = Analysis()
-    df = analysis.get_indoor_zero_entry_material_data()
-    kin = analysis.get_kinetics_data()
-
-    materials = list(kin.sort_values(by='K',ascending=False).index)
-    materials.insert(0, 'none')
-    materials.remove('soil')
+    df = get_sorption_mitigation_data()
+    materials = get_indoor_materials()
 
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     # indoor material analysis
     # combo plot
-    #materials = list(df.index.levels[0])
-    print(df)
     # setting up figure
     fig = plt.figure(dpi=300, constrained_layout=True)
     gs = GridSpec(2,2, figure=fig)
@@ -172,8 +166,8 @@ def indoor_adsorption_zero_entry():
         color = colors[i]
         df_now = df.loc[material]
         df_now.plot(y='c_in',ax=ax1, label=material.title(), logy=True, color=color)
-        df_now.plot(y='sorption_balance',ax=ax2, legend=False,logy=True, color=color)
-        df_now.plot(y='rxn',ax=ax3, legend=False,  logy=True, color=color)
+        #df_now.plot(y='sorption_balance',ax=ax2, legend=False,logy=True, color=color)
+        #df_now.plot(y='rxn',ax=ax3, legend=False,  logy=True, color=color)
 
     #ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns,cellLoc = 'center', rowLoc = 'center', loc='bottom')
 
@@ -325,11 +319,11 @@ path = '../figures/'
 
 
 
-indoor_adsorption()
-plt.savefig(path+'sorption_indoor_cycle.pdf')
-#indoor_adsorption_zero_entry()
+#indoor_adsorption()
+#plt.savefig(path+'sorption_indoor_cycle.pdf')
+indoor_adsorption_zero_entry()
 #plt.savefig(path+'sorption_mitigation.pdf')
-mitigation_time_to_reduction()
-plt.savefig(path+'sorption_reduction_time.pdf')
+#mitigation_time_to_reduction()
+#plt.savefig(path+'sorption_reduction_time.pdf')
 
 plt.show()
