@@ -111,3 +111,35 @@ def get_sorption_mitigation_data():
 
     df = pd.DataFrame(data={'time': ts, 'c_in': c_ins, 'c_sorbs': c_sorbs, 'material': mats})
     return df.set_index(['material', 'time'])
+
+
+def get_sorption_mitigation_reduction_table():
+    materials = get_indoor_materials()
+    reductions = [0.5, 0.1, 0.01, 0.001]
+    taus = []
+    reds = [] # for storage
+    mats = []
+
+    for material in materials:
+        x = Mitigation(material=material)
+        for reduction in reductions:
+            tau = float(x.get_reduction_time(reduction=reduction))
+            taus.append(tau)
+            reds.append(reduction)
+            mats.append(material.title())
+
+    df = pd.DataFrame(
+        data={
+            'Material': mats,
+            'Reduction time (hr)': taus,
+            'Reduction factor': reds,
+            }
+        )
+
+
+    df.sort_values(
+        by=['Reduction factor','Reduction time (hr)'],
+        ascending=[False, True],
+        inplace=True,
+    )
+    return df
