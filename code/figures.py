@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from analysis import Analysis, get_sorption_mitigation_data
+from analysis import Analysis, get_sorption_mitigation_data, get_sorption_mitigation_reduction_table
 import matplotlib.ticker as mtick
 from matplotlib.gridspec import GridSpec
 
@@ -146,33 +146,58 @@ def soil_adsorption():
 def indoor_adsorption_zero_entry():
     analysis = Analysis()
     df = get_sorption_mitigation_data()
-    materials = get_indoor_materials()
+    df2 = get_sorption_mitigation_reduction_table()
+    materials = df2['Material'].unique()
+
 
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     # indoor material analysis
     # combo plot
     # setting up figure
-    fig = plt.figure(dpi=300, constrained_layout=True)
-    gs = GridSpec(2,2, figure=fig)
-
-    ax1 = fig.add_subplot(gs[0,0])
-    ax2 = fig.add_subplot(gs[0,1])
-    ax3 = fig.add_subplot(gs[1,0])
-    ax4 = fig.add_subplot(gs[1,1])
-
+    fig, (ax1, ax2) = plt.subplots(2,1,dpi=300)
+    t0, tau = 0, 24
+    c0 = df['c_in'].values[0]
+    reduction = 0.5
+    c0_red = c0*reduction
+    ax1.plot([t0,tau], [c0_red, c0_red], 'k-')
 
     for i, material in enumerate(materials):
         color = colors[i]
-        df_now = df.loc[material]
+        df_now = df.loc[material.lower()]
         df_now.plot(y='c_in',ax=ax1, label=material.title(), logy=True, color=color)
-        #df_now.plot(y='sorption_balance',ax=ax2, legend=False,logy=True, color=color)
-        #df_now.plot(y='rxn',ax=ax3, legend=False,  logy=True, color=color)
 
-    #ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns,cellLoc = 'center', rowLoc = 'center', loc='bottom')
 
-    ax1.legend(title='Material')
-    ax1.set(xlabel='Time (hr)',ylabel='$\\alpha$', title='Attenuation factor from groundwater following elimination of contaminant entry')
+    sns.barplot(
+        data=df2,
+        x='Reduction factor',
+        y='Reduction time (hr)',
+        hue='Material',
+        ax=ax2,
+    )
+    for p in ax2.patches:
+        height = p.get_height()
+        ax2.text(
+            p.get_x()+p.get_width()/2.,
+            height,
+            '{:1.1f}'.format(height),
+            ha="center",
+        )
+
+    ax1.legend(title='Material', frameon=True)
+    ax1.set(
+        xlabel='Time (hr)',
+        ylabel='$c_\\mathrm{in} \\; \\mathrm{(\\mu g/m^3)}$',
+        title='Delay in indoor containant concentration reduction, due to contaminant \n desorption from indoor materials, after contaminant entry ceases ',
+        ylim=[1e-2, 1e1]
+    )
+
+    ax2.set(
+        title='Increase in time for indoor contaminant concentration to decrease by a certain factor due to desorption',
+        yscale='log',
+    )
+
+
 
     plt.tight_layout()
     return
@@ -322,7 +347,7 @@ path = '../figures/'
 #indoor_adsorption()
 #plt.savefig(path+'sorption_indoor_cycle.pdf')
 indoor_adsorption_zero_entry()
-#plt.savefig(path+'sorption_mitigation.pdf')
+plt.savefig(path+'sorption_mitigation.pdf')
 #mitigation_time_to_reduction()
 #plt.savefig(path+'sorption_reduction_time.pdf')
 
