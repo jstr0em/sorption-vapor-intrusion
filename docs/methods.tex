@@ -229,8 +229,39 @@ $k_1$ and $k_2$ are the sorption and desorption rate constants in $\mathrm{1/s}$
 These values of $k_1$ and $k_2$ are found by applying \eqref{eq:sorption_rate} numerically to the experimental data via least square fitting.
 We use Runge-Kutta method of order 5(4) as the numerical solve, which is implemented together with the least square method in the SciPy python package\cite{jones_scipy_2011}.
 
-% TODO: Create table of all the constants and values used
-\begin{table}
-  \caption{Transport properties and model parameters. To be completed.}
-  \label{tbl:model}
+
+\begin{table}[htb!]
+  \setlength{\tabcolsep}{1pt}
+  \centering
+  \begin{tabular}{l c c c c c c c}
+    \toprule
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % SOIL PROPERTIES
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \multicolumn{7}{c}{\textbf{Soil Properties}\cite{dan_capillary_2012,abreu_conceptual_2012,u.s._environmental_protection_agency_userss_2004}} \\
+    \midrule
+    \textbf{Soil} & \textbf{$\kappa \; \mathrm{(m^2)}$} & \textbf{$\theta_s$} & \textbf{$\theta_r$} & \textbf{$\alpha \; \mathrm{(1/m)}$} & \textbf{$n$} & \textbf{$\rho \; \mathrm{kg/m^3}$} \\
+    % GRAVEL
+    Sand & $9.9 \cdot 10^{-12}$ & 0.38 & 0.053 & 3.5 & 3.2 & 1460 \\
+    % SANDY LOAM
+    Sandy Loam & $5.9 \cdot 10^{-13}$ & 0.39 & 0.039 & 2.7 & 1.4 & 1460 \\
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % TCE PROPERTIES
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \midrule
+    \multicolumn{7}{c}{\textbf{Trichloroethylene (diluted in air) Properties}\cite{abreu_conceptual_2012,u.s._environmental_protection_agency_userss_2004}} \\
+    \midrule
+    \multicolumn{1}{c}{\textbf{$D_\mathrm{air} \; \mathrm{(m^2/h)}$}} & \textbf{$D_\mathrm{water} \; \mathrm{(m^2/h)}$} & \textbf{$\rho \; \mathrm{(kg/m^3)}$} & \textbf{$\mu \; \mathrm{(Pa \cdot s)}$} & \textbf{$K_H$} \\
+    \multicolumn{1}{c}{$2.47 \cdot 10^{-2}$} & $3.67 \cdot 10^{-6}$ & 1.614 & $1.86 \cdot 10^{-5}$ & 0.403 \\
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % BUILDING PROPERTIES
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \midrule
+    \multicolumn{7}{c}{\textbf{Building Properties}} \\
+    \midrule
+    \multicolumn{1}{c}{\textbf{$V_\mathrm{base} \; \mathrm{(m^3)}$}} & \textbf{$L_\mathrm{slab} \; \mathrm{(cm)}$} & \textbf{$A_e \; \mathrm{(1/hr)}$} \\
+    \multicolumn{1}{c}{300} & 15 & 0.5 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Transport and material properties used in the model. See Table \ref{tbl:abbreviations} for nomenclature.}\label{tbl:model}
 \end{table}
