@@ -53,11 +53,11 @@ The magnitude of indoor contaminant concentration change in response to a pressu
 To investigate the effect that soil sorption has on contaminant soil mass transport in the VI context, we have run two types transient simulation where initially the modeled structure is depressurized at a steady -5 Pa to establish a steady-state baseline.
 At the start of the simulation, the building building is further depressurized to -15 Pa \eqref{eq:equilibrium_depressurization}, or overpressurized to 15 Pa \eqref{eq:equilibrium_overpressurization}, and the simulation is allowed to run for 72 hours. % TODO: Update this once the new simulations are done.
 \begin{align}
-  \text{Depressurization}: \; \Delta p_\mathrm{in/out} &= \begin{cases}
+  \text{Depressurization}: \; p_\mathrm{in} &= \begin{cases}
     -5, \; &t = 0 \; \mathrm{(hr)} \\
     -15, \; &0 < t \leq 72 \; \mathrm{(hr)}
 \end{cases}\label{eq:equilibrium_depressurization}\\
-\text{Overpressurzation}: \; \Delta p_\mathrm{in/out} &= \begin{cases}
+\text{Overpressurzation}: \; p_\mathrm{in} &= \begin{cases}
   -5, \; &t = 0 \; \mathrm{(hr)} \\
   15, \; &0 < t \leq 72 \; \mathrm{(hr)}
 \end{cases}\label{eq:equilibrium_overpressurization}
@@ -246,11 +246,3 @@ The number of hours for each case are also shown at the top of each bar.\par
 
 From this, we see that it takes 1.4 hours for the a 50\% reduction in indoor air concentration to occur for the reference, paper, and wood cases, while this time increases up to 305 hours in the cinderblock case.
 This indicates the significant effect that sorption of TCE onto cinderblock can potentially have on the efficacy on a VI mitigation scheme, with the remaining materials having a relatively minor or moderate effect; a trend we've seen in other parts of this work.
-
-
-
-\begin{figure}
-  \includegraphics[width=\textwidth]{sorption_reduction_time.pdf}
-  \caption{}
-  \label{fig:sorption_reduction_time}
-\end{figure}
