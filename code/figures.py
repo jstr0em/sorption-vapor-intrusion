@@ -160,7 +160,7 @@ def indoor_adsorption_zero_entry():
     c0 = df['c_in'].values[0]
     reduction = 0.5
     c0_red = c0*reduction
-    ax1.plot([t0,tau], [c0_red, c0_red], 'k-')
+    #ax1.plot([t0,tau], [c0_red, c0_red], 'k-')
 
     for i, material in enumerate(materials):
         color = colors[i]
