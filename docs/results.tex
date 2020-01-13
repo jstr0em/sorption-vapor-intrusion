@@ -224,25 +224,46 @@ However we also see from the analysis of the sorption dynamics that the desorpti
 
 The work done by us and others has shown the large sorptive capacities of various common materials.
 The desorption of the sorbed contaminants may have significant impact on the apparent efficacy of various mitigation systems.
-To investigate this we consider a scenario where initially the modeled building is depressurized with -5 Pa and at the start of the simulation some perfect mitigation scheme is implemented and the contaminant entry $n_\mathrm{entry}$ in \eqref{eq:cstr} goes to zero.
+To investigate this we consider a scenario where initially the modeled building is depressurized at -5 Pa and at the start of the simulation some perfect mitigation scheme is implemented and the contaminant entry $n_\mathrm{entry}$ in \eqref{eq:cstr} goes to zero.
 We also assume that for each case, the indoor environment contains the same amount of indoor material as described in section \ref{sec:results_indoor_sorption}.
-The air exchange rate is assumed to remain a constant 0.5 per hour for the entire 72 hour simulation time.\par % TODO: Update this time if you run a longer simulation later.
+The air exchange rate is assumed to remain a constant 0.5 per hour for the entire simulation time.\par
 
-The decrease in indoor air concentration (as attenuation factor $\alpha$) for each simulated case is seen in Figure \ref{fig:sorption_mitigation}.
+Hence, we can drop $n_\mathrm{ck}$ in \eqref{eq:cstr} and the equations used to model the indoor concentration becomes:
+\begin{align}
+  V_\mathrm{bldg} \frac{\partial c_\mathrm{in}}{\partial t} &= A_e c_\mathrm{in} V_\mathrm{bldg} - r_\mathrm{sorb} V_\mathrm{mat}\label{eq:cstr} \\
+  V_\mathrm{mat} \frac{\partial c_\mathrm{sorb}}{\partial t} &= r_\mathrm{sorb} V_\mathrm{mat}\label{eq:sorbed_concentration} \\
+  r_\mathrm{sorb} &= k_1 c_\mathrm{in} - k_2 c_\mathrm{sorb}\label{eq:sorption_rate}
+\end{align}
+This system of ordinary differential equations can be solved analytically.
+A solution to this is
+\begin{equation}
+  \begin{bmatrix}
+    c_\mathrm{in} \\ c_\mathrm{sorb}
+  \end{bmatrix} =
+  A \exp{(\lambda_1 t)} \vec{v_1} + B \exp{(\lambda_2 t)} \vec{v_2}
+\end{equation}
+and finding the eigenvalues ($\lambda_1, \; \lambda_2$) and eigenvectors ($\vec{v_1}, \; \vec{v_2}$) of the system above, allows us to calculate the indoor and sorbed contaminants concentrations through time.
+$A$ and $B$ are constants found using the initial conditions
+\begin{align}
+  c_\mathrm{in}(t=0) = c_\mathrm{in,0} \rightarrow A \\
+  c_\mathrm{sorb}(t=0) = c_\mathrm{sorb,0} K \rightarrow B
+\end{align}
+where we assume that $c_\mathrm{in,0} = 2 \; \mathrm{(\mu g/m^3)}$.\par
+
+The decrease in indoor air concentration (as attenuation factor $\alpha$) for each case is seen in the top panel of Figure \ref{fig:sorption_mitigation}.
 As excepted, when there is no sorbing indoor materials, i.e. our reference case, the indoor concentration decreases log-linearily.
 We can also see that contaminant desorption from materials maintains a higher indoor air concentration relative to reference, with cinderblock again shown to have the great impact.\par
 
-% TODO: Update the code to generate this figure using the mitigation class
 \begin{figure}[!htb]
   \includegraphics[width=\textwidth]{sorption_mitigation.pdf}
-  \caption{}
+  \caption{Contaminant desorption from indoor materials delay the decrease in indoor contaminant concentration after a mitigation system has been implemented. The top panel shows the indoor air concentration after system implementation, considering desorption from different materials. The bottom panel quantifies how long it takes for the indoor concentration to decrease by a certain factor, considering the different cases.}
   \label{fig:sorption_mitigation}
 \end{figure}
 
 Clearly, the contaminant desorption from indoor materials can significantly delay the time that a certain reduction in indoor air concentration after a successful mitigation system has been implemented.
-In Figure \ref{fig:sorption_reduction_time} we quantified the number of hours for a fifty percent, a one and two orders of magnitude reduction in indoor air concentration to occurs, both absent sorbing indoor materials (the reference case) and in the presence of the one's presented earlier in this work.
+In the bottom panel of Figure \ref{fig:sorption_reduction_time} we quantified the number of hours for a fifty percent, a one, and two orders of magnitude reduction in indoor air concentration to occurs, both absent sorbing indoor materials (the reference case) and in the presence of the one's presented earlier in this work.
 On the x-axis the indoor air concentration reduction factor is shown, and on the y-axis the number of hours for the specified reduction occur is displayed, for each material.
 The number of hours for each case are also shown at the top of each bar.\par
 
 From this, we see that it takes 1.4 hours for the a 50\% reduction in indoor air concentration to occur for the reference, paper, and wood cases, while this time increases up to 305 hours in the cinderblock case.
-This indicates the significant effect that sorption of TCE onto cinderblock can potentially have on the efficacy on a VI mitigation scheme, with the remaining materials having a relatively minor or moderate effect; a trend we've seen in other parts of this work.
+This indicates the significant effect that sorption of TCE onto cinderblock can potentially have on the efficacy on a VI mitigation scheme, with the remaining materials having a relatively minor or moderate effect; a trend we've seen in other parts of this work.\par
