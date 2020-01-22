@@ -19,7 +19,7 @@ The sorption column was then desorbed into a gas-chromatograph fitted with a ele
 
 \begin{figure}
   \includegraphics[width=\textwidth]{JS_SX_experiment_setup.png}
-  \caption{Schematic of experimental setup.} % TODO: Shuai: Write longer description?
+  \caption{Schematic of experimental setup.}
   \label{fig:js_sx_setup}
 \end{figure}
 
@@ -88,9 +88,8 @@ $k_r$ is the relative permeability of water transport and $1-k_r$ gives the rela
 \subsubsection{Gas Flow In The Vadose Zone}\label{sec:darcy}
 
 The gas flow in the vadose zone is governed by a modified version of Darcy's Law.
-Originally, Darcy's Law was developed to describe flow in saturated porous media; but flow in unsaturated media requires some modification.
+Originally, Darcy's Law was developed to describe flow in saturated porous media; but flow in unsaturated media requires some modification\cite{c._w._fetter_contaminant_1993}.
 An effective permeability that depends on the relative permeability given by the van Genuchten equations is introduced to allow for correct permeability in unsaturated porous media.\par
-% TODO: Find a good reference for DL. Maybe one of my books?
 
 The vapor flow continuity governing equation is given by
 \begin{equation}\label{eq:darcy}
@@ -110,7 +109,7 @@ Remaining boundaries are no-flow boundary conditions.
 \begin{align}
   &\text{Atmosphere} &p = 0 \; \mathrm{(Pa)} \\
   &\text{Foundation crack} &p = p_\mathrm{in} - p_\mathrm{out} = p_\mathrm{in} \; \mathrm{(Pa)} \\
-  &\text{All other} &-\vec{n}\cdot\rho_\mathrm{air}\vec{u} = 0 \; \mathrm{(kg/(m^2\cdot s))}
+  &\text{All other} &-\vec{n}\cdot\rho\vec{u} = 0 \; \mathrm{(kg/(m^2\cdot s))}
 \end{align}
 Here $\vec{n}$ and $\vec{u}$ are the boundary normal and gas velocity vectors.
 
@@ -131,10 +130,10 @@ $K_H$ is the dimensionless Henry's Law constant.\par
 
 In this work, we consider sorption equilibrium between the soil and vapor phases, to be governed by the water contaminant concentration \eqref{eq:linear_sorption}.
 \begin{equation}\label{eq:linear_sorption}
-  c_s = K_\mathrm{ads} \rho_b c_g = K_\mathrm{ads} \frac{\rho}{1-\theta_t} K_H c_w
+  c_s = K_\mathrm{ads} \rho_b c_g = K_\mathrm{ads} \frac{\rho}{1-\theta_s} K_H c_w
 \end{equation}
 Here the $c_s$ is the solid phase concentration in $\mathrm{mol/kg}$;
-$\rho_b$ is the bulk density of the soil $\mathrm{kg/m^3}$, which is given by the density $\rho$ and the total soil porosity $\theta_t$;
+$\rho_b$ is the bulk density of the soil $\mathrm{kg/m^3}$, which is given by the density $\rho$ and the total soil porosity $\theta_s$;
 $K_\mathrm{ads}$ is the vapor-solid sorption partition coefficient in $\mathrm{m^3/kg}$.\par
 
 Mass transport in the vadose zone is governed by diffusion and advection and is given by \eqref{eq:mass_transport}.
@@ -177,7 +176,7 @@ $K_\mathrm{ads}$ is the vapor-solid partition coefficient in $\mathrm{m^3/kg}$.\
 The effective diffusivity in the vadose zone varies with the soil moisture content, from being close to that in water when fully saturated and close to that in air when soil moisture is low.
 Millington-Quirk developed \eqref{eq:millington-quirk} which describes the effective diffusivity in variably saturated porous media.
 \begin{equation}\label{eq:millington-quirk}
-  D_\mathrm{eff} = D_\mathrm{water} \frac{\theta_w^\frac{7}{3}}{\theta_t^2} + \frac{D_\mathrm{air}}{K_H} \frac{\theta_g^\frac{7}{3}}{\theta_t^2}
+  D_\mathrm{eff} = D_\mathrm{water} \frac{\theta_w^\frac{7}{3}}{\theta_s^2} + \frac{D_\mathrm{air}}{K_H} \frac{\theta_g^\frac{7}{3}}{\theta_s^2}
 \end{equation}
 Where the porosity terms reflect the water and gas phase tortuosity;
 $D_\mathrm{air}$ and $D_\mathrm{water}$ are the contaminant diffusion coefficient in air and water respectively in $\mathrm{m^2/s}$;
@@ -219,7 +218,7 @@ The sorption of contaminant on indoor materials is given by the sorption term in
 
 Here $V_\mathrm{bldg}$ and $V_\mathrm{mat}$ are the indoor control volume and volume of indoor material in $\mathrm{m^3}$;
 $c_\mathrm{in}$ and $c_\mathrm{sorb}$ are the indoor and sorbed (onto the indoor material) contaminant concentrations in $\mathrm{mol/m^3}$;
-$n_\mathrm{entry}$ is the contaminant entry rate in $\mathrm{mol/s}$, which is calculated by integrating the contaminant flux $j_{ck}$ over the foundation crack area;
+$n_\mathrm{ck}$ is the contaminant entry rate in $\mathrm{mol/s}$, which is calculated by integrating the contaminant flux $j_{ck}$ over the foundation crack area;
 $r_\mathrm{sorb}$ sorption rate in $\mathrm{mol/(m^3 \cdot s)}$;
 $k_1$ and $k_2$ are the sorption and desorption rate constants in $\mathrm{1/s}$.\par
 
@@ -258,7 +257,7 @@ We use Runge-Kutta method of order 5(4) as the numerical solve, which is impleme
     \midrule
     \multicolumn{7}{c}{\textbf{Building Properties}} \\
     \midrule
-    \multicolumn{1}{c}{\textbf{$V_\mathrm{base} \; \mathrm{(m^3)}$}} & \textbf{$L_\mathrm{slab} \; \mathrm{(cm)}$} & \textbf{$A_e \; \mathrm{(1/hr)}$} \\
+    \multicolumn{1}{c}{\textbf{$V_\mathrm{bldg} \; \mathrm{(m^3)}$}} & \textbf{$L_\mathrm{slab} \; \mathrm{(cm)}$} & \textbf{$A_e \; \mathrm{(1/hr)}$} \\
     \multicolumn{1}{c}{300} & 15 & 0.5 \\
     \bottomrule
   \end{tabular}

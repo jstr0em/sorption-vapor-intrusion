@@ -45,9 +45,8 @@ def indoor_adsorption():
 
     handles, labels = ax3.get_legend_handles_labels()
 
-    # TODO: See if you can place the figure legend where it currently is without this hack...
     ax3.legend([],[],loc='center left',bbox_to_anchor=(1.15,1))
-    fig.legend(handles, labels,loc='center left', title='Material', bbox_to_anchor=(0.85,0.5))
+    fig.legend(handles, labels,loc='center left', title='Material', bbox_to_anchor=(0.845,0.5))
 
     return
 
@@ -124,7 +123,7 @@ def soil_adsorption():
         ads_ratio.append(df_now['c_ads/c_gas'].values[0])
         df_now.plot(y='alpha', label='K_ads = %1.2e' % case, ax=ax)
     ax.set(title='Attenuation factor during during over-/depressurization cycle',
-    xlabel='Time (hr)', ylabel='$\\alpha$')
+    xlabel='Time (hr)', ylabel='$\\alpha_\\mathrm{gw}$')
     ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
 
 
@@ -134,7 +133,7 @@ def soil_adsorption():
     change_in_response.plot(x='K_ads', y='c_ads/c_gas', ax=ax2, style='-o', legend=False,logy=True)
 
     ax1.set(title='Change in attenuation factor relative to no soil sorption\nduring over-/depressurization cycle\nas a function of soil sorption isotherm',
-     ylabel='$\\frac{\\alpha}{\\alpha_{no-sorption}}$')
+     ylabel='$\\frac{\\alpha_\\mathrm{gw}}{\\alpha_\\mathrm{gw,no-sorption}}$')
     ax2.set(xticks=np.arange(0,len(cases)), xticklabels=cases.astype(str),
     xlabel='$K_\\mathrm{ads} \; \\mathrm{(m^3/kg)}$', ylabel='$c_{ads}/c_{gas}$')
 
@@ -246,14 +245,15 @@ def time_to_equilibrium():
 
         ax1.set(
             #ylim=[0,1],
+            xlabel='Time (hr)',
             title='Indoor air concentration over time (as attenuation factor)',
-            ylabel='$\\alpha$',
+            ylabel='$\\alpha_\\mathrm{gw}$',
             #yscale='log',
         )
         ax2.set(
             #ylim=[0,1],
             title='Attenuation factor distance from new equilibrium',
-            ylabel='$\\frac{\\alpha - \\alpha_0}{\\alpha_{eq} - \\alpha_0}$',
+            ylabel='$\\frac{\\alpha_\\mathrm{gw} - \\alpha_\\mathrm{0,gw}}{\\alpha_\\mathrm{gw,eq} - \\alpha_\\mathrm{gw,0}}$',
         )
         ax3.set(
             #ylim=[1e-6, 1],
@@ -262,11 +262,9 @@ def time_to_equilibrium():
             yscale='log',
         )
 
-        ax1.ticklabel_format(axis='y', style='sci') # TODO: Figure out why this doesn't work
+        ax1.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.2e}'))
         handles, labels = ax2.get_legend_handles_labels()
         ax1.legend(handles, labels, title='Soil & sorptivity', loc='upper right', frameon=True)
-        #ax1.legend([],[],loc='center left',bbox_to_anchor=(1.60,1))
-        #fig.legend(handles, labels, title='Soil & sorptivity',loc='center left', bbox_to_anchor=(0.72,0.5))
 
         fig.suptitle(titles[cycle])
 
@@ -333,21 +331,22 @@ def mitigation_time_to_reduction():
     plt.tight_layout()
     return
 # may not be included
-#Kinetics(file='../../data/adsorption_kinetics.csv',material='drywall').plot()
-#soil_adsorption()
 
 # story
 path = '../figures/'
 #sorption_fit()
 #plt.savefig(path+'sorption_fit.pdf')
-#time_to_equilibrium()
+time_to_equilibrium()
 
 
 
-#indoor_adsorption()
-#plt.savefig(path+'sorption_indoor_cycle.pdf')
+indoor_adsorption()
+plt.savefig(path+'sorption_indoor_cycle.pdf')
 indoor_adsorption_zero_entry()
 plt.savefig(path+'sorption_mitigation.pdf')
+
+
+# old
 #mitigation_time_to_reduction()
 #plt.savefig(path+'sorption_reduction_time.pdf')
 
