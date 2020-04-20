@@ -188,8 +188,8 @@ The atmosphere acts as a contaminant sink and thus this is simply a zero concent
 Contaminants leave the soil domain and enter the building through a combination of advective and diffusive gas phase transport.
 The boundary condition applied to all other boundaries is a no-flow boundary.
 \begin{align}
-  &\text{Groundwater} & c_w = 0 \; \mathrm{(mol/m^3)} \\
-  &\text{Atmosphere} & c_w = c_{gw} \; \mathrm{(mol/m^3)} \\
+  &\text{Atmosphere} & c_w = 0 \; \mathrm{(mol/m^3)} \\
+  &\text{Groundwater} & c_w = c_{gw} \; \mathrm{(mol/m^3)} \\
   &\text{Foundation crack} & -\vec{n} \cdot \vec{N} = - \frac{j_{ck}}{K_H} \; \mathrm{(mol/(m^2 \cdot s))}\\
   &\text{All other} & -\vec{n} \cdot \vec{N} = 0 \; \mathrm{(mol/(m^2 \cdot s))}
 \end{align}
